@@ -1,9 +1,9 @@
-const mongoose = require("mongoose");
-const validator = require("validator");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { default: eventSchema } = require("./eventsModel");
-const { default: blogSchema } = require("./blogModel");
+import mongoose from "mongoose";
+import validator from "validator";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import eventSchema from "./eventsModel.js";
+import blogSchema from "./blogModel.js";
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -89,5 +89,5 @@ userSchema.methods.comparePassword = async function (password) {
     return await bcrypt.compare(password, this.password);
 };
 
-module.exports = mongoose.model("User", userSchema);
-// module.exports = mongoose.model('General_Setting', generalSettingSchema);
+const User = mongoose.model("User", userSchema);
+export default User;

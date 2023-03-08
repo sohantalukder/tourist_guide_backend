@@ -7,7 +7,6 @@ const eventSchema = mongoose.Schema(
         payment: { type: Boolean, default: false },
         endData: { type: String, required: true },
         location: { type: String, required: true },
-        comment: { type: String, required: true },
     },
     {
         timestamps: true,
