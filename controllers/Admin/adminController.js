@@ -1,4 +1,4 @@
-import User from "../../Models/userModel.js";
+import User from "../../Models/User/userModel.js";
 
 // Register a User
 const adminLogin = async (req, res, next) => {

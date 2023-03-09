@@ -1,4 +1,4 @@
-export const response = (code, message = "ok", records = []) => {
+export const response = ({ code, message = "ok", records = [] }) => {
     return {
         response: {
             status: {

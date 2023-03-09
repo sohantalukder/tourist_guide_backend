@@ -1,4 +1,4 @@
-import User from "../../Models/userModel.js";
+import User from "../../Models/User/userModel.js";
 
 const user = async (req, res, next) => {
     const email = req.params.email;

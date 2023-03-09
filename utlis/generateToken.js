@@ -1,4 +1,3 @@
-COOKIE_EXPIRE;
 import jwt from "jsonwebtoken";
 
 const generateToken = (id) => {
