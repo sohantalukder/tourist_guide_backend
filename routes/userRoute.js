@@ -1,6 +1,6 @@
 import express from "express";
 import { adminLogin, admin } from "../controllers/Admin/adminController.js";
-import { users, userUpdate } from "../controllers/User/User.js";
+import { userUpdate } from "../controllers/User/User.js";
 import {
     authUser,
     registerUser,

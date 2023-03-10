@@ -19,23 +19,29 @@ const authUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).select("+password");
     if (user && (await user.comparePassword(password))) {
-        res.status(200).json(
-            response({
-                code: 200,
-                message: "ok",
-                records: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    phone: user.phone,
-                    imageURL: user.image,
-                    role: user.role,
-                    emailVerify: user.emailVerify,
-                    userStatus: user.status,
-                    token: generateToken(user._id),
-                },
-            })
-        );
+        if (!user.emailVerify) {
+            res.status(401).json(
+                response({ code: 401, message: "Please verify your email." })
+            );
+        } else {
+            res.status(200).json(
+                response({
+                    code: 200,
+                    message: "ok",
+                    records: {
+                        id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone,
+                        imageURL: user.image,
+                        role: user.role,
+                        emailVerify: user.emailVerify,
+                        userStatus: user.status,
+                        token: generateToken(user._id),
+                    },
+                })
+            );
+        }
     } else {
         res.status(401).json(
             response({ code: 401, message: "Invalid email or password" })
