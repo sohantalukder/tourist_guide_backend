@@ -9,7 +9,6 @@ const createEvent = asyncHandler(async (req, res) => {
         const {
             name,
             description,
-            eventCover,
             price,
             person,
             pickUpLocation,
@@ -20,7 +19,6 @@ const createEvent = asyncHandler(async (req, res) => {
             endDate,
         } = req.body;
         const image = req.file;
-        console.log(Object.keys(image)?.length > 0);
         const creatorId = req.user._id;
         const user = await User.findById(creatorId);
         if (user) {
@@ -76,5 +74,73 @@ const createEvent = asyncHandler(async (req, res) => {
         );
     }
 });
-
-export { createEvent };
+const updateEventInfo = asyncHandler(async (req, res) => {
+    try {
+        const {
+            name,
+            description,
+            price,
+            person,
+            pickUpLocation,
+            destinationLocation,
+            guide,
+            busServices,
+            startDate,
+            endDate,
+        } = req.body;
+        const event = await Events.findOne({ _id: req.params.id });
+        const image = req.file;
+        if (event) {
+            if (image?.size / 1000000 <= 2 || !image) {
+                if (image) {
+                    const imageURI = await getDataURI(image);
+                    const cloudImage = await cloudinary.v2.uploader.upload(
+                        imageURI.content
+                    );
+                    event.image = cloudImage.secure_url || event.image;
+                }
+                event.name = name || event.name;
+                event.description = description || event.description;
+                event.price = price || event.price;
+                event.person = person || event.person;
+                event.pickUpLocation = pickUpLocation || event.pickUpLocation;
+                event.destinationLocation =
+                    destinationLocation || event.destinationLocation;
+                event.guide = guide || event.guide;
+                event.busServices = busServices || event.busServices;
+                event.startDate = startDate || event.startDate;
+                event.endDate = endDate || event.endDate;
+                await event.save();
+                res.status(200).json(
+                    response({
+                        code: 200,
+                        message: "Successfully updated event information!",
+                    })
+                );
+            } else {
+                res.status(400).json(
+                    response({
+                        code: 400,
+                        message:
+                            "Profile image size must be less than or equal to 2 MB",
+                    })
+                );
+            }
+        } else {
+            res.status(404).json(
+                response({
+                    code: 404,
+                    message: "Event Not Found!",
+                })
+            );
+        }
+    } catch (error) {
+        res.status(401).json(
+            response({
+                code: 401,
+                message: error.message,
+            })
+        );
+    }
+});
+export { createEvent, updateEventInfo };
