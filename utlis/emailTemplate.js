@@ -1,6 +1,6 @@
 export const emailTemplate = ({ otp }) => {
     return `<div style="background-color:#f6f6f6;margin:0">
-  <table style="font-family:'akzidenz','helvetica','arial',sans-serif;font-size:14px;color:#5e5e5e;width:98%;max-width:600px;float:none;margin:0 auto" border="0" cellpadding="0" cellspacing="0" valign="top" align="left">
+  <table style="font-family:'akzidenz','helvetica','arial',sans-serif;font-size:14px;color:#5e5e5e;width:98%;max-width:600px;float:none;margin:0 auto;padding-top:50px" border="0" cellpadding="0" cellspacing="0" valign="top" align="left">
     <tbody>
       <tr bgcolor="#ffffff">
         <td>

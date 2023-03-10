@@ -7,11 +7,11 @@ import UserOptVerification from "../../Models/User/otpVerificationModel.js";
 import { emailTemplate } from "../../utlis/emailTemplate.js";
 import UserOtpVerification from "../../Models/User/otpVerificationModel.js";
 let transporter = nodemailer.createTransport({
-    host: "smtp-relay.sendinblue.com",
+    host: process.env.SMTP_SERVER,
     port: 587,
     auth: {
-        user: "tourists.guides2@gmail.com",
-        pass: "1KrAdqIWQwzGt3Jp",
+        user: process.env.SMTP_AUTH_EMAIL,
+        pass: process.env.SMTP_AUTH_PASSWORD,
     },
 });
 
@@ -30,6 +30,7 @@ const authUser = asyncHandler(async (req, res) => {
                     phone: user.phone,
                     imageURL: user.image,
                     role: user.role,
+                    emailVerify: user.emailVerify,
                     userStatus: user.status,
                     token: generateToken(user._id),
                 },
@@ -109,7 +110,7 @@ const sendOTPVerificationEmail = async ({ user, res }) => {
     try {
         const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
         const mailOptions = {
-            from: '"Tourist Guide" <tourists.guides2@gmail.com>',
+            from: `"Tourist Guide" <${process.env.SMTP_AUTH_EMAIL}>`,
             to: user.email,
             subject: "One-time verification code",
             text: "Welcome to Tourist Guide",
@@ -172,10 +173,9 @@ const verifyOTP = asyncHandler(async (req, res) => {
                 const { expiredAt, otp: recordOtp } =
                     userOtpVerificationRecords;
                 if (expiredAt < Date.now()) {
-                    const a = await UserOptVerification.deleteMany({
+                    await UserOptVerification.deleteMany({
                         userId: req.user._id,
                     });
-                    console.log(a);
                     res.status(401).json(
                         response({
                             code: 401,
@@ -229,4 +229,37 @@ const verifyOTP = asyncHandler(async (req, res) => {
     }
 });
 
-export { authUser, duplicateEmailCheck, registerUser, verifyOTP };
+const resendVerifyOTP = asyncHandler(async (req, res) => {
+    try {
+        const user = await User.findOne(req.user._id);
+        if (user && !user.emailVerify) {
+            await UserOptVerification.deleteOne({
+                userId: req.user._id,
+            });
+            sendOTPVerificationEmail({ user, res });
+        } else {
+            res.status(401).json(
+                response({
+                    code: 401,
+                    message:
+                        "Please resend OTP to your email with valid user details",
+                })
+            );
+        }
+    } catch (error) {
+        res.status(401).json(
+            response({
+                code: 401,
+                message: error.message,
+            })
+        );
+    }
+});
+
+export {
+    authUser,
+    duplicateEmailCheck,
+    registerUser,
+    verifyOTP,
+    resendVerifyOTP,
+};

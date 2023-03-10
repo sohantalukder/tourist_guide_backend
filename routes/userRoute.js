@@ -4,6 +4,7 @@ import { users, userUpdate } from "../controllers/User/User.js";
 import {
     authUser,
     registerUser,
+    resendVerifyOTP,
     verifyOTP,
 } from "../controllers/User/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
@@ -15,5 +16,6 @@ router.route("/admin").get(admin);
 router.post("/login", authUser);
 router.post("/register", registerUser);
 router.route("/emailVerification").post(protect, verifyOTP);
+router.route("/resendVerifyOTP").get(protect, resendVerifyOTP);
 router.route("/users").put(userUpdate);
 export default router;
