@@ -323,9 +323,9 @@ const updateUserProfile = asyncHandler(async (req, res) => {
                 })
             );
         } else {
-            res.status(400).json(
+            res.status(401).json(
                 response({
-                    code: 400,
+                    code: 401,
                     message:
                         "Description not grater than 300 characters and not smaller than 50 characters!",
                 })

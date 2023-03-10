@@ -13,7 +13,7 @@ import settingsRoute from "./routes/Settings/generalSettingRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 // Route Imports
 import userRoutes from "./routes/Auth/userRoute.js";
-// import errorMiddleware from "./middleware/error";
+import adminRoutes from "./routes/Admin/adminRoutes.js";
 
 app.use(express.json());
 app.use(cookieParser());
@@ -21,6 +21,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload());
 app.use("/api/v1", settingsRoute);
 app.use("/api/v1/auth", userRoutes);
+app.use("/api/v1/admin", adminRoutes);
 app.use(express.static(path.join("http://localhost:3000/")));
 app.get("*", (req, res) => {
     res.sendFile(path.resolve("http://localhost:3000/"));

@@ -1,5 +1,6 @@
 import User from "../../Models/User/userModel.js";
-
+import asyncHandler from "express-async-handler";
+import { response } from "../../utlis/generateResponse.js";
 // Register a User
 const adminLogin = async (req, res, next) => {
     const user = req.body;
@@ -31,5 +32,22 @@ const admin = async (req, res, next) => {
     }
     res.json({ admin: isAdmin });
 };
+const getAllUsers = asyncHandler(async (req, res) => {
+    const sort = { _id: -1 };
+    const users = await User.find({}).sort(sort);
+    if (users?.length > 0) {
+        res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    users,
+                },
+            })
+        );
+    } else {
+        res.status(404).json(response(404, "Users not found!", []));
+    }
+});
 
-export { adminLogin, admin };
+export { getAllUsers };
