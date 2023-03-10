@@ -1,6 +1,7 @@
 import express from "express";
 import {
     createEvent,
+    deleteEvent,
     eventDetails,
     updateEventInfo,
 } from "../../controllers/Events/eventsController.js";
@@ -15,5 +16,6 @@ router
     .route("/updateEvent/:id")
     .put(protect, verifiedEmail, singleUpload, updateEventInfo);
 router.route("/:id").get(protect, verifiedEmail, eventDetails);
+router.route("/:id").delete(protect, verifiedEmail, deleteEvent);
 
 export default router;
