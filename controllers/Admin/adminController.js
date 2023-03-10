@@ -66,5 +66,17 @@ const getAllUsers = asyncHandler(async (req, res) => {
         res.status(404).json(response(404, "Users not found!", []));
     }
 });
-
-export { getAllUsers, adminLogin };
+const deleteUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if (user) {
+        await user.remove();
+        res.status(200).json(
+            response({ code: 200, message: "User Removed Successfully" })
+        );
+    } else {
+        res.status(404).json(
+            response({ code: 404, message: "User not found!" })
+        );
+    }
+});
+export { getAllUsers, adminLogin, deleteUser };
