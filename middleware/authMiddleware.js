@@ -38,4 +38,17 @@ const admin = (req, res, next) => {
         );
     }
 };
-export { protect, admin };
+const verifiedEmail = (req, res, next) => {
+    if (req?.user && req.user?.emailVerify === true) {
+        next();
+    } else {
+        res.status(401).json(
+            response({
+                code: 401,
+                message:
+                    "Your email is not verified. Please verify your email first.",
+            })
+        );
+    }
+};
+export { protect, admin, verifiedEmail };

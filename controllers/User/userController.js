@@ -3,9 +3,12 @@ import User from "../../Models/User/userModel.js";
 import { response } from "../../utlis/generateResponse.js";
 import generateToken from "../../utlis/generateToken.js";
 import nodemailer from "nodemailer";
+import cloudinary from "cloudinary";
 import UserOptVerification from "../../Models/User/otpVerificationModel.js";
 import { emailTemplate } from "../../utlis/emailTemplate.js";
 import UserOtpVerification from "../../Models/User/otpVerificationModel.js";
+import getDataURI from "../../utlis/dataUri.js";
+
 let transporter = nodemailer.createTransport({
     host: "smtp-relay.sendinblue.com",
     port: 587,
@@ -298,19 +301,11 @@ const resendVerifyOTP = asyncHandler(async (req, res) => {
 
 const updateUserProfile = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
-    const {
-        name,
-        image,
-        fvtFoods,
-        fvtPlace,
-        location,
-        contactNumber,
-        description,
-    } = req.body || {};
+    const { name, fvtFoods, fvtPlace, location, contactNumber, description } =
+        req.body || {};
     if (user) {
         if (description?.length >= 50 && description?.length <= 300) {
             user.name = name || user.name;
-            user.image = image || user.image;
             user.fvtFoods = fvtFoods || user.fvtFoods;
             user.fvtPlace = fvtPlace || user.fvtPlace;
             user.location = location || user.location;
@@ -337,7 +332,42 @@ const updateUserProfile = asyncHandler(async (req, res) => {
         );
     }
 });
-
+const uploadProfileImage = asyncHandler(async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (user) {
+            const image = req.file;
+            if (image.size / 1000000 <= 2) {
+                const imageURI = await getDataURI(image);
+                const cloudImage = await cloudinary.v2.uploader.upload(
+                    imageURI.content
+                );
+                user.image = cloudImage.secure_url || user.image;
+                await user.save();
+                res.status(200).json(
+                    response({
+                        code: 200,
+                        message: "Successfully updated profile picture!",
+                    })
+                );
+            } else {
+                res.status(404).json(
+                    response({
+                        code: 404,
+                        message:
+                            "Profile image size must be less than or equal to 2 MB",
+                    })
+                );
+            }
+        } else {
+            res.status(404).json(
+                response({ code: 404, message: "User not found!" })
+            );
+        }
+    } catch (error) {
+        res.status(404).json(response({ code: 404, message: error.message }));
+    }
+});
 export {
     authUser,
     duplicateEmailCheck,
@@ -346,4 +376,5 @@ export {
     resendVerifyOTP,
     updateUserProfile,
     getUser,
+    uploadProfileImage,
 };
