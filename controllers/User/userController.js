@@ -269,7 +269,9 @@ const getUser = asyncHandler(async (req, res) => {
             })
         );
     } else {
-        res.status(404).json(response(404, "User not found!", []));
+        res.status(404).json(
+            response({ code: 404, message: "User not found!" })
+        );
     }
 });
 const resendVerifyOTP = asyncHandler(async (req, res) => {

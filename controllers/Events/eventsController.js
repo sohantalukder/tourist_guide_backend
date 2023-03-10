@@ -89,40 +89,51 @@ const updateEventInfo = asyncHandler(async (req, res) => {
             endDate,
         } = req.body;
         const event = await Events.findOne({ _id: req.params.id });
+        const user = await User.findOne(req.user._id);
         const image = req.file;
         if (event) {
-            if (image?.size / 1000000 <= 2 || !image) {
-                if (image) {
-                    const imageURI = await getDataURI(image);
-                    const cloudImage = await cloudinary.v2.uploader.upload(
-                        imageURI.content
+            if (user._id == event.creatorId) {
+                if (image?.size / 1000000 <= 2 || !image) {
+                    if (image) {
+                        const imageURI = await getDataURI(image);
+                        const cloudImage = await cloudinary.v2.uploader.upload(
+                            imageURI.content
+                        );
+                        event.image = cloudImage.secure_url || event.image;
+                    }
+                    event.name = name || event.name;
+                    event.description = description || event.description;
+                    event.price = price || event.price;
+                    event.person = person || event.person;
+                    event.pickUpLocation =
+                        pickUpLocation || event.pickUpLocation;
+                    event.destinationLocation =
+                        destinationLocation || event.destinationLocation;
+                    event.guide = guide || event.guide;
+                    event.busServices = busServices || event.busServices;
+                    event.startDate = startDate || event.startDate;
+                    event.endDate = endDate || event.endDate;
+                    await event.save();
+                    res.status(200).json(
+                        response({
+                            code: 200,
+                            message: "Successfully updated event information!",
+                        })
                     );
-                    event.image = cloudImage.secure_url || event.image;
+                } else {
+                    res.status(400).json(
+                        response({
+                            code: 400,
+                            message:
+                                "Profile image size must be less than or equal to 2 MB",
+                        })
+                    );
                 }
-                event.name = name || event.name;
-                event.description = description || event.description;
-                event.price = price || event.price;
-                event.person = person || event.person;
-                event.pickUpLocation = pickUpLocation || event.pickUpLocation;
-                event.destinationLocation =
-                    destinationLocation || event.destinationLocation;
-                event.guide = guide || event.guide;
-                event.busServices = busServices || event.busServices;
-                event.startDate = startDate || event.startDate;
-                event.endDate = endDate || event.endDate;
-                await event.save();
-                res.status(200).json(
-                    response({
-                        code: 200,
-                        message: "Successfully updated event information!",
-                    })
-                );
             } else {
                 res.status(400).json(
                     response({
                         code: 400,
-                        message:
-                            "Profile image size must be less than or equal to 2 MB",
+                        message: "You are not able update events details.",
                     })
                 );
             }
@@ -143,4 +154,38 @@ const updateEventInfo = asyncHandler(async (req, res) => {
         );
     }
 });
-export { createEvent, updateEventInfo };
+const eventDetails = asyncHandler(async (req, res) => {
+    const event = await Events.findById(req.params.id);
+    const user = await User.findOne({ _id: event.creatorId });
+    if (event) {
+        res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    id: event._id,
+                    name: event.name,
+                    creatorId: event.creatorId,
+                    createName: user.name,
+                    creatorEmail: user.email,
+                    createImage: user.image,
+                    description: event.description,
+                    price: event.price,
+                    person: event.person,
+                    pickUpLocation: event.pickUpLocation,
+                    destinationLocation: event.destinationLocation,
+                    image: event.image,
+                    guide: event.guide,
+                    busServices: event.busServices,
+                    startDate: event.startDate,
+                    endDate: event.endDate,
+                },
+            })
+        );
+    } else {
+        res.status(404).json(
+            response({ code: 404, message: "Event not found!" })
+        );
+    }
+});
+export { createEvent, updateEventInfo, eventDetails };

@@ -1,6 +1,7 @@
 import express from "express";
 import {
     createEvent,
+    eventDetails,
     updateEventInfo,
 } from "../../controllers/Events/eventsController.js";
 import { protect, verifiedEmail } from "../../middleware/authMiddleware.js";
@@ -13,5 +14,6 @@ router
 router
     .route("/updateEvent/:id")
     .put(protect, verifiedEmail, singleUpload, updateEventInfo);
+router.route("/:id").get(protect, verifiedEmail, eventDetails);
 
 export default router;
