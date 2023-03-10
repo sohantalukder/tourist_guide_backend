@@ -9,12 +9,12 @@ const otpVerificationSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    createAt: Date,
+    createdAt: Date,
     expiredAt: Date,
 });
 
-const UserOptVerification = mongoose.model(
-    "userOptVerification",
+const UserOtpVerification = mongoose.model(
+    "userOtpVerification",
     otpVerificationSchema
 );
-export default UserOptVerification;
+export default UserOtpVerification;

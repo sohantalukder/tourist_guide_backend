@@ -3,8 +3,18 @@ import User from "../../Models/User/userModel.js";
 import { response } from "../../utlis/generateResponse.js";
 import generateToken from "../../utlis/generateToken.js";
 import nodemailer from "nodemailer";
-import bcrypt from "bcryptjs";
 import UserOptVerification from "../../Models/User/otpVerificationModel.js";
+import { emailTemplate } from "../../utlis/emailTemplate.js";
+import UserOtpVerification from "../../Models/User/otpVerificationModel.js";
+let transporter = nodemailer.createTransport({
+    host: "smtp-relay.sendinblue.com",
+    port: 587,
+    auth: {
+        user: "tourists.guides2@gmail.com",
+        pass: "1KrAdqIWQwzGt3Jp",
+    },
+});
+
 const authUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).select("+password");
@@ -36,8 +46,8 @@ const duplicateEmailCheck = asyncHandler(async (req, res) => {
     const { email } = req.body;
     const userExists = await User.findOne({ email });
     if (userExists) {
-        res.status(400).json(
-            response({ code: 400, message: "User already is already taken" })
+        res.status(401).json(
+            response({ code: 401, message: "User already is already taken" })
         );
     } else {
         res.status(200).json(
@@ -52,119 +62,171 @@ const registerUser = asyncHandler(async (req, res) => {
     email = email.trim();
     password = password.trim();
     if (name === "" || email === "" || password === "") {
-        res.status(400).json(
-            response({ code: 400, message: "Empty input fields!" })
+        res.status(401).json(
+            response({ code: 401, message: "Empty input fields!" })
         );
     } else if (!/^[a-zA-z ]*$/.test(name)) {
-        res.status(400).json(
-            response({ code: 400, message: "Invalid name entered!" })
+        res.status(401).json(
+            response({ code: 401, message: "Invalid name entered!" })
         );
     } else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-        res.status(400).json(
-            response({ code: 400, message: "Invalid email entered!" })
+        res.status(401).json(
+            response({ code: 401, message: "Invalid email entered!" })
         );
     } else if (password.length < 8) {
-        res.status(400).json(
-            response({ code: 400, message: "Password is too short!" })
+        res.status(401).json(
+            response({ code: 401, message: "Password is too short!" })
         );
     } else {
         const userExists = await User.findOne({ email });
 
         if (userExists) {
-            res.status(400).json(response(400, "User already exits", []));
-        }
-        const user = await User.create({
-            name,
-            email,
-            password,
-        });
-        if (user) {
-            res.status(201).json(
-                response({
-                    code: 201,
-                    message: "Ok",
-                    records: {
-                        id: user._id,
-                        name: user.name,
-                        email: user.email,
-                        phone: user.phone,
-                        imageURL: user.image,
-                        role: user.role,
-                        userStatus: user.status,
-                        token: generateToken(user._id),
-                    },
-                })
+            res.status(401).json(
+                response({ code: 401, message: "User already exits" })
             );
         } else {
-            res.status(400).json(400, "Invalid user data", []);
+            const user = await User.create({
+                name,
+                email,
+                password,
+            });
+            if (user) {
+                sendOTPVerificationEmail({
+                    user,
+                    res,
+                });
+            } else {
+                res.status(401).json(
+                    response({ code: 401, message: "Invalid user data" })
+                );
+            }
         }
     }
 });
 
 //send otp verification email
-const sendOTPVerificationEmail = async ({ _id, email }) => {
+const sendOTPVerificationEmail = async ({ user, res }) => {
     try {
         const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
         const mailOptions = {
-            from: process.env.AUTH_EMAIL,
-            to: email,
+            from: '"Tourist Guide" <tourists.guides2@gmail.com>',
+            to: user.email,
             subject: "One-time verification code",
-            html: (
-                <div style='font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2'>
-                    <div style='margin:50px auto;width:70%;padding:20px 0'>
-                        <div style='border-bottom:1px solid #eee'>
-                            <a
-                                href=''
-                                style='font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600'
-                            >
-                                Tourist Guide
-                            </a>
-                        </div>
-                        <p style='font-size:1.1em'>Hi,</p>
-                        <p>
-                            Thank you for choosing Tourist Guide. Use the
-                            following OTP to complete your Sign Up procedures.
-                            OTP is valid for 5 minutes
-                        </p>
-                        <h2 style='background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;'>
-                            324457
-                        </h2>
-                        <p style='font-size:0.9em;'>
-                            Regards,
-                            <br />
-                            Tourist Guide
-                        </p>
-                        <hr style='border:none;border-top:1px solid #eee' />
-                        <div style='float:right;padding:8px 0;color:#aaa;font-size:0.8em;line-height:1;font-weight:300'>
-                            <p>Tourist Guide</p>
-                            <p>Mirpur, Dhaka</p>
-                            <p>Bangladesh</p>
-                        </div>
-                    </div>
-                </div>
-            ),
+            text: "Welcome to Tourist Guide",
+            html: emailTemplate({ otp }),
         };
-        const saltRounds = 10;
-        const hashedOTP = await bcrypt.hash(otp, saltRounds);
         const newOTPVerification = await new UserOptVerification({
-            userId: _id,
-            otp: hashedOTP,
+            userId: user._id,
+            otp: otp,
             createdAt: Date.now(),
-            expiredAt: Date.now() + 300000,
+            expiredAt: Date.now() + 3000000,
         });
         await newOTPVerification.save();
         await transporter.sendMail(mailOptions);
         res.status(202).json(
             response({
                 code: 202,
-                message: "Ok",
+                message: "Verification OTP sent to your email!",
                 records: {
-                    id: id,
-                    email: email,
+                    id: user._id,
+                    userStatus: user.status,
+                    emailVerify: user.emailVerify,
+                    token: generateToken(user._id),
                 },
             })
         );
-    } catch (error) {}
+    } catch (error) {
+        res.status(401).json(
+            response({
+                code: 401,
+                message: error.message,
+            })
+        );
+    }
 };
 
-export { authUser, duplicateEmailCheck, registerUser };
+const verifyOTP = asyncHandler(async (req, res) => {
+    try {
+        const { otp } = req.body;
+        if (!req.user._id || !otp) {
+            res.status(401).json(
+                response({
+                    code: 401,
+                    message: "Empty otp details are not allowed",
+                })
+            );
+        } else {
+            const userOtpVerificationRecords =
+                await UserOtpVerification.findOne({
+                    userId: req.user._id,
+                });
+            if (!userOtpVerificationRecords) {
+                res.status(401).json(
+                    response({
+                        code: 401,
+                        message:
+                            "Account record doesn't exit or has been verified already. Please sign up or log in",
+                    })
+                );
+            } else {
+                const { expiredAt, otp: recordOtp } =
+                    userOtpVerificationRecords;
+                if (expiredAt < Date.now()) {
+                    const a = await UserOptVerification.deleteMany({
+                        userId: req.user._id,
+                    });
+                    console.log(a);
+                    res.status(401).json(
+                        response({
+                            code: 401,
+                            message: "Code has expired. Please request again!",
+                        })
+                    );
+                } else {
+                    const validOtp = otp === recordOtp;
+                    if (!validOtp) {
+                        res.status(401).json(
+                            response({
+                                code: 401,
+                                message:
+                                    "Invalid code passed. Check your inbox!",
+                            })
+                        );
+                    } else {
+                        const getUser = await User.findOne({
+                            _id: req.user._id,
+                        });
+                        getUser.emailVerify = true;
+                        const updatedUser = await getUser.save();
+                        res.status(201).json(
+                            response({
+                                code: 201,
+                                message: "User email verified successfully",
+                                records: {
+                                    id: updatedUser._id,
+                                    name: updatedUser.name,
+                                    email: updatedUser.email,
+                                    phone: updatedUser.phone,
+                                    imageURL: updatedUser.image,
+                                    role: updatedUser.role,
+                                    emailVerify: updatedUser.emailVerify,
+                                    userStatus: updatedUser.status,
+                                    token: generateToken(updatedUser._id),
+                                },
+                            })
+                        );
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        res.status(401).json(
+            response({
+                code: 401,
+                message: error.message,
+            })
+        );
+    }
+});
+
+export { authUser, duplicateEmailCheck, registerUser, verifyOTP };
