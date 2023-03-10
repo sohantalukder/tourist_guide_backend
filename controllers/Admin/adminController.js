@@ -1,34 +1,82 @@
-const catchAsyncErrors = require('../../middleware/catchAsyncErrors');
-const userModel = require('../../Models/userModel');
-
+import User from "../../Models/User/userModel.js";
+import asyncHandler from "express-async-handler";
+import { response } from "../../utlis/generateResponse.js";
+import generateToken from "../../utlis/generateToken.js";
 // Register a User
-exports.adminLogin = async (req, res, next) => {
-	const user = req.body;
-	const requester = req.decodedEmail;
-	if (requester) {
-		const requesterAccount = await usersCollection.findOne({
-			email: requester,
-		});
-		if (requesterAccount.role === 'admin') {
-			const filter = { email: user.email };
-			const updateDoc = { $set: { role: 'admin' } };
-			const result = await usersCollection.updateOne(filter, updateDoc);
-			res.json(result);
-		}
-	} else {
-		res
-			.status(401)
-			.json({ message: 'You do not have permission to make admin' });
-	}
-};
+const adminLogin = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email }).select("+password");
+    if (user && (await user.comparePassword(password))) {
+        if (user.role === "admin") {
+            res.status(200).json(
+                response({
+                    code: 200,
+                    message: "Ok",
+                    records: {
+                        records: {
+                            id: user._id,
+                            name: user.name,
+                            email: user.email,
+                            emailVerify: user.emailVerify,
+                            fvtFoods: user.fvtFoods,
+                            fvtPlace: user.fvtPlace,
+                            status: user.status,
+                            role: user.role,
+                            image: user.image,
+                            location: user.location,
+                            contactNumber: user.contactNumber,
+                            description: user.description,
+                            token: generateToken(user._id),
+                        },
+                    },
+                })
+            );
+        } else {
+            res.status(401).json(
+                response({
+                    code: 401,
+                    message: "You do not have permission to make admin",
+                })
+            );
+        }
+    } else {
+        res.status(401).json(
+            response({
+                code: 401,
+                message: "Invalid email or password",
+            })
+        );
+    }
+});
 
-exports.admin = async (req, res, next) => {
-	const email = req.params.email;
-	const query = { email: email };
-	const user = await userModel.findOne(query);
-	let isAdmin = false;
-	if (user?.role === 'admin') {
-		isAdmin = true;
-	}
-	res.json({ admin: isAdmin });
-};
+const getAllUsers = asyncHandler(async (req, res) => {
+    const sort = { _id: -1 };
+    const users = await User.find({}).sort(sort);
+    if (users?.length > 0) {
+        res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    users,
+                },
+            })
+        );
+    } else {
+        res.status(404).json(response(404, "Users not found!", []));
+    }
+});
+const deleteUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if (user) {
+        await user.remove();
+        res.status(200).json(
+            response({ code: 200, message: "User Removed Successfully" })
+        );
+    } else {
+        res.status(404).json(
+            response({ code: 404, message: "User not found!" })
+        );
+    }
+});
+export { getAllUsers, adminLogin, deleteUser };
