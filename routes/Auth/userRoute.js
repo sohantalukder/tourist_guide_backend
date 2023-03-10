@@ -1,6 +1,6 @@
 import express from "express";
-import { adminLogin, admin } from "../controllers/Admin/adminController.js";
-import { userUpdate } from "../controllers/User/User.js";
+import { adminLogin, admin } from "../../controllers/Admin/adminController.js";
+import { userUpdate } from "../../controllers/User/User.js";
 import {
     authUser,
     getUser,
@@ -8,8 +8,8 @@ import {
     resendVerifyOTP,
     updateUserProfile,
     verifyOTP,
-} from "../controllers/User/userController.js";
-import { protect } from "../middleware/authMiddleware.js";
+} from "../../controllers/User/userController.js";
+import { protect } from "../../middleware/authMiddleware.js";
 
 const router = express.Router();
 

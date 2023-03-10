@@ -12,7 +12,7 @@ import fileUpload from "express-fileupload";
 import settingsRoute from "./routes/Settings/generalSettingRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 // Route Imports
-import userRoutes from "./routes/userRoute.js";
+import userRoutes from "./routes/Auth/userRoute.js";
 // import errorMiddleware from "./middleware/error";
 
 app.use(express.json());
