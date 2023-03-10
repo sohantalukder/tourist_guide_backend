@@ -20,9 +20,7 @@ const authUser = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email }).select("+password");
     if (user && (await user.comparePassword(password))) {
         if (!user.emailVerify) {
-            res.status(401).json(
-                response({ code: 401, message: "Please verify your email." })
-            );
+            sendOTPVerificationEmail({ user, res });
         } else {
             res.status(200).json(
                 response({
@@ -32,11 +30,15 @@ const authUser = asyncHandler(async (req, res) => {
                         id: user._id,
                         name: user.name,
                         email: user.email,
-                        phone: user.phone,
-                        imageURL: user.image,
-                        role: user.role,
                         emailVerify: user.emailVerify,
-                        userStatus: user.status,
+                        fvtFoods: user.fvtFoods,
+                        fvtPlace: user.fvtPlace,
+                        status: user.status,
+                        role: user.role,
+                        image: user.image,
+                        location: user.location,
+                        contactNumber: user.contactNumber,
+                        description: user.description,
                         token: generateToken(user._id),
                     },
                 })
@@ -163,11 +165,13 @@ const verifyOTP = asyncHandler(async (req, res) => {
                 })
             );
         } else {
-            const userOtpVerificationRecords =
-                await UserOtpVerification.findOne({
-                    userId: req.user._id,
-                });
-            if (!userOtpVerificationRecords) {
+            const userOtpVerificationRecords = await UserOtpVerification.find({
+                userId: req.user._id,
+            });
+            if (
+                !userOtpVerificationRecords ||
+                userOtpVerificationRecords <= 0
+            ) {
                 res.status(401).json(
                     response({
                         code: 401,
@@ -177,7 +181,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
                 );
             } else {
                 const { expiredAt, otp: recordOtp } =
-                    userOtpVerificationRecords;
+                    userOtpVerificationRecords[0];
                 if (expiredAt < Date.now()) {
                     await UserOptVerification.deleteMany({
                         userId: req.user._id,
@@ -212,11 +216,15 @@ const verifyOTP = asyncHandler(async (req, res) => {
                                     id: updatedUser._id,
                                     name: updatedUser.name,
                                     email: updatedUser.email,
-                                    phone: updatedUser.phone,
-                                    imageURL: updatedUser.image,
-                                    role: updatedUser.role,
                                     emailVerify: updatedUser.emailVerify,
-                                    userStatus: updatedUser.status,
+                                    fvtFoods: updatedUser.fvtFoods,
+                                    fvtPlace: updatedUser.fvtPlace,
+                                    status: updatedUser.status,
+                                    role: updatedUser.role,
+                                    image: updatedUser.image,
+                                    location: updatedUser.location,
+                                    contactNumber: updatedUser.contactNumber,
+                                    description: updatedUser.description,
                                     token: generateToken(updatedUser._id),
                                 },
                             })

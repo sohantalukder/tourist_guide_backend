@@ -1,8 +1,6 @@
 import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
-import eventSchema from "./eventsModel.js";
-import blogSchema from "./blogModel.js";
 const userSchema = mongoose.Schema({
     name: {
         type: String,
@@ -30,6 +28,7 @@ const userSchema = mongoose.Schema({
     image: {
         type: String,
         required: false,
+        default: null,
     },
     description: {
         type: String,
@@ -48,12 +47,12 @@ const userSchema = mongoose.Schema({
     location: {
         type: String,
         required: false,
+        default: null,
     },
-    blogs: [blogSchema],
-    events: [eventSchema],
     contactNumber: {
         type: Number,
         required: false,
+        default: null,
     },
     status: {
         type: String,
