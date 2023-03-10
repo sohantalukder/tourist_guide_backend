@@ -33,6 +33,7 @@ const userSchema = mongoose.Schema({
     description: {
         type: String,
         required: false,
+        default: null,
         maxLength: [300, "Name cannot exceed 300 characters"],
         minLength: [50, "Name should have more than 50 characters"],
     },
@@ -50,7 +51,7 @@ const userSchema = mongoose.Schema({
         default: null,
     },
     contactNumber: {
-        type: Number,
+        type: String,
         required: false,
         default: null,
     },

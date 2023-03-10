@@ -243,6 +243,32 @@ const verifyOTP = asyncHandler(async (req, res) => {
     }
 });
 
+const getUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if (user) {
+        res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    fvtFoods: user.fvtFoods,
+                    fvtPlace: user.fvtPlace,
+                    status: user.status,
+                    role: user.role,
+                    image: user.image,
+                    location: user.location,
+                    contactNumber: user.contactNumber,
+                    description: user.description,
+                },
+            })
+        );
+    } else {
+        res.status(404).json(response(404, "User not found!", []));
+    }
+});
 const resendVerifyOTP = asyncHandler(async (req, res) => {
     try {
         const user = await User.findOne(req.user._id);
@@ -270,10 +296,54 @@ const resendVerifyOTP = asyncHandler(async (req, res) => {
     }
 });
 
+const updateUserProfile = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+    const {
+        name,
+        image,
+        fvtFoods,
+        fvtPlace,
+        location,
+        contactNumber,
+        description,
+    } = req.body || {};
+    if (user) {
+        if (description?.length >= 50 && description?.length <= 300) {
+            user.name = name || user.name;
+            user.image = image || user.image;
+            user.fvtFoods = fvtFoods || user.fvtFoods;
+            user.fvtPlace = fvtPlace || user.fvtPlace;
+            user.location = location || user.location;
+            user.contactNumber = contactNumber || user.contactNumber;
+            await user.save();
+            res.status(200).json(
+                response({
+                    code: 200,
+                    message: "Successfully updated profile information!",
+                })
+            );
+        } else {
+            res.status(400).json(
+                response({
+                    code: 400,
+                    message:
+                        "Description not grater than 300 characters and not smaller than 50 characters!",
+                })
+            );
+        }
+    } else {
+        res.status(404).json(
+            response({ code: 404, message: "User not found!" })
+        );
+    }
+});
+
 export {
     authUser,
     duplicateEmailCheck,
     registerUser,
     verifyOTP,
     resendVerifyOTP,
+    updateUserProfile,
+    getUser,
 };
