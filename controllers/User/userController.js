@@ -7,11 +7,11 @@ import UserOptVerification from "../../Models/User/otpVerificationModel.js";
 import { emailTemplate } from "../../utlis/emailTemplate.js";
 import UserOtpVerification from "../../Models/User/otpVerificationModel.js";
 let transporter = nodemailer.createTransport({
-    host: process.env.SMTP_SERVER,
+    host: "smtp-relay.sendinblue.com",
     port: 587,
     auth: {
-        user: process.env.SMTP_AUTH_EMAIL,
-        pass: process.env.SMTP_AUTH_PASSWORD,
+        user: "tourists.guides2@gmail.com",
+        pass: "1KrAdqIWQwzGt3Jp",
     },
 });
 
@@ -110,7 +110,7 @@ const sendOTPVerificationEmail = async ({ user, res }) => {
     try {
         const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
         const mailOptions = {
-            from: `"Tourist Guide" <${process.env.SMTP_AUTH_EMAIL}>`,
+            from: '"Tourist Guide" <tourists.guides2@gmail.com>',
             to: user.email,
             subject: "One-time verification code",
             text: "Welcome to Tourist Guide",
