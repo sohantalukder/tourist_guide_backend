@@ -476,7 +476,6 @@ const verifyResetPassword = asyncHandler(async (req, res) => {
             const otpForResetPassword = await resetOtp.find({
                 email: email,
             });
-            console.log(otpForResetPassword);
             if (!otpForResetPassword || otpForResetPassword <= 0) {
                 res.status(401).json(
                     response({

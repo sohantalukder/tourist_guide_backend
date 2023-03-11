@@ -17,7 +17,7 @@ import {
     protectResetPassword,
     verifiedEmail,
 } from "../../middleware/authMiddleware.js";
-import { singleUpload } from "../../middleware/multer.js";
+import { upload } from "../../middleware/multer.js";
 
 const router = express.Router();
 
@@ -28,7 +28,7 @@ router.route("/user/:id").get(protect, verifiedEmail, getUser);
 router.route("/profile/update").put(protect, verifiedEmail, updateUserProfile);
 router
     .route("/profile/updateProfilePicture")
-    .put(protect, verifiedEmail, singleUpload, uploadProfileImage);
+    .put(protect, verifiedEmail, upload.single("image"), uploadProfileImage);
 router.route("/resendVerifyOTP").get(protect, resendVerifyOTP);
 router.route("/changePassword").put(protect, verifiedEmail, changePassword);
 router.route("/resetPassword").post(resetPassword);
