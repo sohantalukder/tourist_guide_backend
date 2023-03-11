@@ -3,6 +3,7 @@ import cloudinary from "cloudinary";
 import getDataURI from "../../utlis/dataUri.js";
 import { response } from "../../utlis/generateResponse.js";
 import Events from "../../Models/Events/eventsModel.js";
+import User from "../../Models/User/userModel.js";
 const createEvent = asyncHandler(async (req, res) => {
     try {
         const {
@@ -143,6 +144,7 @@ const updateEventInfo = asyncHandler(async (req, res) => {
 });
 const eventDetails = asyncHandler(async (req, res) => {
     const event = await Events.findById(req.params.id);
+    const creator = await User.findOne({ _id: event.creatorId });
     if (event) {
         res.status(200).json(
             response({
@@ -152,9 +154,9 @@ const eventDetails = asyncHandler(async (req, res) => {
                     id: event._id,
                     name: event.name,
                     creatorId: event.creatorId,
-                    createName: req.user.name,
-                    creatorEmail: req.user.email,
-                    createImage: req.user.image,
+                    createName: creator.name,
+                    creatorEmail: creator.email,
+                    createImage: creator.image,
                     description: event.description,
                     price: event.price,
                     person: event.person,
