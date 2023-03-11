@@ -1,6 +1,7 @@
 import express from "express";
 import {
     authUser,
+    changePassword,
     getUser,
     registerUser,
     resendVerifyOTP,
@@ -22,5 +23,6 @@ router
     .route("/profile/updateProfilePicture")
     .put(protect, verifiedEmail, singleUpload, uploadProfileImage);
 router.route("/resendVerifyOTP").get(protect, resendVerifyOTP);
+router.route("/changePassword").put(protect, verifiedEmail, changePassword);
 
 export default router;

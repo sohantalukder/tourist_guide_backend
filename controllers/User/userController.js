@@ -370,6 +370,42 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
         res.status(404).json(response({ code: 404, message: error.message }));
     }
 });
+const changePassword = asyncHandler(async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select("+password");
+        const { oldPassword, newPassword } = req.body;
+        if (user) {
+            if (await user.comparePassword(oldPassword)) {
+                user.password = newPassword;
+                await user.save();
+                res.status(200).json(
+                    response({
+                        code: 200,
+                        message: "Successfully changed your password",
+                    })
+                );
+            } else {
+                res.status(401).json(
+                    response({
+                        code: 401,
+                        message: "Your old password doesn't match!",
+                    })
+                );
+            }
+        } else {
+            res.status(404).json(
+                response({ code: 404, message: "User not found!" })
+            );
+        }
+    } catch (error) {
+        res.status(400).json(
+            response({
+                code: 400,
+                message: error.message,
+            })
+        );
+    }
+});
 export {
     authUser,
     duplicateEmailCheck,
@@ -379,4 +415,5 @@ export {
     updateUserProfile,
     getUser,
     uploadProfileImage,
+    changePassword,
 };
