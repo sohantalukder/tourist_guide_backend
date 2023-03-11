@@ -5,11 +5,18 @@ import {
     getUser,
     registerUser,
     resendVerifyOTP,
+    resetPassword,
+    storeResetPassword,
     updateUserProfile,
     uploadProfileImage,
     verifyOTP,
+    verifyResetPassword,
 } from "../../controllers/User/userController.js";
-import { protect, verifiedEmail } from "../../middleware/authMiddleware.js";
+import {
+    protect,
+    protectResetPassword,
+    verifiedEmail,
+} from "../../middleware/authMiddleware.js";
 import { singleUpload } from "../../middleware/multer.js";
 
 const router = express.Router();
@@ -24,5 +31,10 @@ router
     .put(protect, verifiedEmail, singleUpload, uploadProfileImage);
 router.route("/resendVerifyOTP").get(protect, resendVerifyOTP);
 router.route("/changePassword").put(protect, verifiedEmail, changePassword);
+router.route("/resetPassword").post(resetPassword);
+router.route("/resetPassword/verify").post(verifyResetPassword);
+router
+    .route("/resetPassword/store")
+    .put(protectResetPassword, storeResetPassword);
 
 export default router;

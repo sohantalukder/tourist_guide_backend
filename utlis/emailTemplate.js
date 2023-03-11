@@ -19,7 +19,7 @@ export const emailTemplate = ({ otp }) => {
                 <td style="padding-top:24px;font-size:16px" align="center"><span id="m_-8787331735390009175verification-code" style="font-size:18px"><p style="background-color:#5fbe00;margin:0;color:white;font-weight: 600; letter-spacing: 5px; text-align: center; display: inline-block; padding:10px 20px;">${otp}</p></span></td>
               </tr>
               <tr>
-                <td style="padding-top:24px;font-size:16px">This code expire after 5 mintues. So please verify your account within 5 mintues. If you don't verify your account please resend email.</td>
+                <td style="padding-top:24px;font-size:16px">This code expire after 5 minutes. So please verify your account within 5 minutes. If you don't verify your account please resend email.</td>
               </tr>
             </tbody>
           </table></td>

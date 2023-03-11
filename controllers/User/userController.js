@@ -8,6 +8,8 @@ import UserOptVerification from "../../Models/User/otpVerificationModel.js";
 import { emailTemplate } from "../../utlis/emailTemplate.js";
 import UserOtpVerification from "../../Models/User/otpVerificationModel.js";
 import getDataURI from "../../utlis/dataUri.js";
+import { resetPasswordEmailTemplate } from "../../utlis/resetPasswordEmailTemplate.js";
+import resetOtp from "../../Models/User/resetOTPModel.js";
 
 let transporter = nodemailer.createTransport({
     host: "smtp-relay.sendinblue.com",
@@ -211,7 +213,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
                         });
                         getUser.emailVerify = true;
                         const updatedUser = await getUser.save();
-                        res.status(201).json(
+                        res.status(200).json(
                             response({
                                 code: 201,
                                 message: "User email verified successfully",
@@ -406,6 +408,179 @@ const changePassword = asyncHandler(async (req, res) => {
         );
     }
 });
+const sendOTPResetPassword = async ({ user, res }) => {
+    try {
+        const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
+        const mailOptions = {
+            from: '"Tourist Guide" <tourists.guides2@gmail.com>',
+            to: user.email,
+            subject: "One-time Reset OTP code",
+            html: resetPasswordEmailTemplate({
+                otp,
+                name: user.name,
+                email: user.email,
+            }),
+        };
+        const newRestOTP = await new resetOtp({
+            email: user.email,
+            otp: otp,
+            createdAt: Date.now(),
+            expiredAt: Date.now() + 3000000,
+        });
+        await newRestOTP.save();
+        await transporter.sendMail(mailOptions);
+        res.status(202).json(
+            response({
+                code: 202,
+                message: "Reset OTP sent to your email!",
+            })
+        );
+    } catch (error) {
+        res.status(401).json(
+            response({
+                code: 401,
+                message: error.message,
+            })
+        );
+    }
+};
+const resetPassword = asyncHandler(async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        if (user) {
+            sendOTPResetPassword({
+                user,
+                res,
+            });
+        } else {
+            res.status(404).json(
+                response({ code: 404, message: "User not found!" })
+            );
+        }
+    } catch (error) {
+        res.status(400).json(response({ code: 400, message: error.message }));
+    }
+});
+
+const verifyResetPassword = asyncHandler(async (req, res) => {
+    try {
+        const { otp, email } = req.body;
+        if (!email || !otp) {
+            res.status(401).json(
+                response({
+                    code: 401,
+                    message: "Empty otp details are not allowed",
+                })
+            );
+        } else {
+            const otpForResetPassword = await resetOtp.find({
+                email: email,
+            });
+            console.log(otpForResetPassword);
+            if (!otpForResetPassword || otpForResetPassword <= 0) {
+                res.status(401).json(
+                    response({
+                        code: 401,
+                        message:
+                            "Account record doesn't exit or has been password reset already. Please sign up or log in",
+                    })
+                );
+            } else {
+                const { expiredAt, otp: recordOtp } = otpForResetPassword[0];
+                if (expiredAt < Date.now()) {
+                    await resetOtp.deleteMany({
+                        email: email,
+                    });
+                    res.status(401).json(
+                        response({
+                            code: 401,
+                            message: "Code has expired. Please request again!",
+                        })
+                    );
+                } else {
+                    const validOtp = otp === recordOtp;
+                    if (!validOtp) {
+                        res.status(401).json(
+                            response({
+                                code: 401,
+                                message:
+                                    "Invalid code passed. Check your inbox!",
+                            })
+                        );
+                    } else {
+                        (otpForResetPassword[0].expiredToken =
+                            Date.now() + 3000000),
+                            await otpForResetPassword[0].save();
+                        res.status(200).json(
+                            response({
+                                code: 200,
+                                message: "User email verified successfully",
+                                records: {
+                                    token: generateToken(email),
+                                },
+                            })
+                        );
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        res.status(401).json(
+            response({
+                code: 401,
+                message: error.message,
+            })
+        );
+    }
+});
+const storeResetPassword = asyncHandler(async (req, res) => {
+    try {
+        const { password } = req.body;
+        if (!password) {
+            res.json(400).json(
+                response({ code: 400, message: "Please enter password!" })
+            );
+        } else {
+            const resetOTP = await resetOtp.find({ email: req.user.email });
+            if (!resetOTP || resetOTP <= 0) {
+                res.status(401).json(
+                    response({
+                        code: 401,
+                        message:
+                            "Account record doesn't exit or has been password reset already. Please sign up or log in",
+                    })
+                );
+            } else {
+                const { expiredToken } = resetOTP[0];
+                if (expiredToken < Date.now()) {
+                    await resetOtp.deleteMany({
+                        email: req.user.email,
+                    });
+                    res.status(401).json(
+                        response({
+                            code: 401,
+                            message: "Code has expired. Please request again!",
+                        })
+                    );
+                } else {
+                    const getUser = await User.findOne({
+                        email: req.user.email,
+                    });
+                    getUser.password = password;
+                    await getUser.save();
+                    res.status(200).json(
+                        response({
+                            code: 200,
+                            message: "Successfully reset password!",
+                        })
+                    );
+                }
+            }
+        }
+    } catch (error) {
+        res.json(400).json(response({ code: 400, message: error.message }));
+    }
+});
 export {
     authUser,
     duplicateEmailCheck,
@@ -416,4 +591,7 @@ export {
     getUser,
     uploadProfileImage,
     changePassword,
+    resetPassword,
+    verifyResetPassword,
+    storeResetPassword,
 };
