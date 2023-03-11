@@ -5,11 +5,6 @@ import { upload } from "../../middleware/multer.js";
 const router = express.Router();
 router
     .route("/update")
-    .put(
-        protect,
-        admin,
-        upload.array("whiteLogo", "blackLogo"),
-        updatePreference
-    );
+    .put(protect, admin, upload.single("logo"), updatePreference);
 
 export default router;

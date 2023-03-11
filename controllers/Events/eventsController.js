@@ -46,9 +46,9 @@ const createEvent = asyncHandler(async (req, res) => {
                 })
             );
         } else {
-            res.status(404).json(
+            res.status(400).json(
                 response({
-                    code: 404,
+                    code: 400,
                     message:
                         "Profile image size must be less than or equal to 2 MB",
                 })
