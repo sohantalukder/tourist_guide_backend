@@ -1,10 +1,9 @@
 import multer from "multer";
 import path from "path";
+import { response } from "../utlis/generateResponse.js";
 const storage = multer.memoryStorage();
 
-const singleUpload = multer({ storage }).single("image");
-const multipleUpload = multer({ storage }).array("image");
-const upload = multer({
+const multerConfig = multer({
     storage: storage,
     limits: { fileSize: 2 * 1024 * 1024 },
     fileFilter: (req, file, callback) => {
@@ -27,5 +26,20 @@ const upload = multer({
         callback(null, true);
     },
 });
-
-export { singleUpload, multipleUpload, upload };
+const uploadField = multerConfig.any();
+const upload = (req, res, next) => {
+    uploadField(req, res, function (err) {
+        if (err instanceof multer.MulterError) {
+            res.status(500).json(
+                response({
+                    code: 500,
+                    message: "Image size must be less than 2 MB",
+                })
+            );
+        } else if (err) {
+            res.status(500).json(response({ code: 500, message: err.message }));
+        }
+        next();
+    });
+};
+export { upload };

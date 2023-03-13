@@ -340,29 +340,19 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
         if (user) {
-            const image = req.file;
-            if (image.size / 1000000 <= 2) {
-                const imageURI = await getDataURI(image);
-                const cloudImage = await cloudinary.v2.uploader.upload(
-                    imageURI.content
-                );
-                user.image = cloudImage.secure_url || user.image;
-                await user.save();
-                res.status(200).json(
-                    response({
-                        code: 200,
-                        message: "Successfully updated profile picture!",
-                    })
-                );
-            } else {
-                res.status(400).json(
-                    response({
-                        code: 400,
-                        message:
-                            "Profile image size must be less than or equal to 2 MB",
-                    })
-                );
-            }
+            const image = req.files[0];
+            const imageURI = await getDataURI(image);
+            const cloudImage = await cloudinary.v2.uploader.upload(
+                imageURI.content
+            );
+            user.image = cloudImage.secure_url || user.image;
+            await user.save();
+            res.status(200).json(
+                response({
+                    code: 200,
+                    message: "Successfully updated profile picture!",
+                })
+            );
         } else {
             res.status(404).json(
                 response({ code: 404, message: "User not found!" })

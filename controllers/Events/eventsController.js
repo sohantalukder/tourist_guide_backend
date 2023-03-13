@@ -18,42 +18,32 @@ const createEvent = asyncHandler(async (req, res) => {
             startDate,
             endDate,
         } = req.body;
-        const image = req.file;
+        const image = req.files[0];
         const creatorId = req.user._id;
-        if (image?.size / 1000000 <= 2) {
-            const imageURI = await getDataURI(image);
-            const cloudImage = await cloudinary.v2.uploader.upload(
-                imageURI.content
-            );
-            await Events.create({
-                name,
-                description,
-                price,
-                person,
-                pickUpLocation,
-                destinationLocation,
-                guide: guide ? true : false,
-                busServices: busServices ? true : false,
-                startDate,
-                endDate,
-                image: cloudImage.secure_url,
-                creatorId,
-            });
-            res.status(200).json(
-                response({
-                    code: 200,
-                    message: "Successfully created event",
-                })
-            );
-        } else {
-            res.status(400).json(
-                response({
-                    code: 400,
-                    message:
-                        "Profile image size must be less than or equal to 2 MB",
-                })
-            );
-        }
+        const imageURI = await getDataURI(image);
+        const cloudImage = await cloudinary.v2.uploader.upload(
+            imageURI.content
+        );
+        await Events.create({
+            name,
+            description,
+            price,
+            person,
+            pickUpLocation,
+            destinationLocation,
+            guide: guide ? true : false,
+            busServices: busServices ? true : false,
+            startDate,
+            endDate,
+            image: cloudImage.secure_url,
+            creatorId,
+        });
+        res.status(200).json(
+            response({
+                code: 200,
+                message: "Successfully created event",
+            })
+        );
     } catch (error) {
         res.status(401).json(
             response({
@@ -78,45 +68,34 @@ const updateEventInfo = asyncHandler(async (req, res) => {
             endDate,
         } = req.body;
         const event = await Events.findOne({ _id: req.params.id });
-        const image = req.file;
+        const image = req.files[0];
         if (event) {
             if (req.user._id == event.creatorId) {
-                if (image?.size / 1000000 <= 2 || !image) {
-                    if (image) {
-                        const imageURI = await getDataURI(image);
-                        const cloudImage = await cloudinary.v2.uploader.upload(
-                            imageURI.content
-                        );
-                        event.image = cloudImage.secure_url || event.image;
-                    }
-                    event.name = name || event.name;
-                    event.description = description || event.description;
-                    event.price = price || event.price;
-                    event.person = person || event.person;
-                    event.pickUpLocation =
-                        pickUpLocation || event.pickUpLocation;
-                    event.destinationLocation =
-                        destinationLocation || event.destinationLocation;
-                    event.guide = guide || event.guide;
-                    event.busServices = busServices || event.busServices;
-                    event.startDate = startDate || event.startDate;
-                    event.endDate = endDate || event.endDate;
-                    await event.save();
-                    res.status(200).json(
-                        response({
-                            code: 200,
-                            message: "Successfully updated event information!",
-                        })
+                if (image) {
+                    const imageURI = await getDataURI(image);
+                    const cloudImage = await cloudinary.v2.uploader.upload(
+                        imageURI.content
                     );
-                } else {
-                    res.status(400).json(
-                        response({
-                            code: 400,
-                            message:
-                                "Profile image size must be less than or equal to 2 MB",
-                        })
-                    );
+                    event.image = cloudImage.secure_url || event.image;
                 }
+                event.name = name || event.name;
+                event.description = description || event.description;
+                event.price = price || event.price;
+                event.person = person || event.person;
+                event.pickUpLocation = pickUpLocation || event.pickUpLocation;
+                event.destinationLocation =
+                    destinationLocation || event.destinationLocation;
+                event.guide = guide || event.guide;
+                event.busServices = busServices || event.busServices;
+                event.startDate = startDate || event.startDate;
+                event.endDate = endDate || event.endDate;
+                await event.save();
+                res.status(200).json(
+                    response({
+                        code: 200,
+                        message: "Successfully updated event information!",
+                    })
+                );
             } else {
                 res.status(400).json(
                     response({

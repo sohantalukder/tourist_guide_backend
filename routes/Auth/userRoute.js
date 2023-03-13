@@ -28,7 +28,7 @@ router.route("/user/:id").get(protect, verifiedEmail, getUser);
 router.route("/profile/update").put(protect, verifiedEmail, updateUserProfile);
 router
     .route("/profile/updateProfilePicture")
-    .put(protect, verifiedEmail, upload.single("image"), uploadProfileImage);
+    .put(protect, verifiedEmail, upload, uploadProfileImage);
 router.route("/resendVerifyOTP").get(protect, resendVerifyOTP);
 router.route("/changePassword").put(protect, verifiedEmail, changePassword);
 router.route("/resetPassword").post(resetPassword);
