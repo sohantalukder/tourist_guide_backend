@@ -81,5 +81,48 @@ const updatePreference = asyncHandler(async (req, res) => {
         res.status(500).json(response({ code: 500, message: error.message }));
     }
 });
+const getPreference = asyncHandler(async (req, res) => {
+    try {
+        const preference = await Preferences.findOne({});
+        if (preference) {
+            res.status(200).json(
+                response({
+                    code: 200,
+                    message: "Ok",
+                    records: {
+                        website_name: preference.website_name,
+                        website_keywords: preference.website_keywords,
+                        website_keywords: preference.website_keywords,
+                        website_copyright: preference.website_copyright,
+                        logos: {
+                            blackLogo: preference.blackLogo,
+                            whiteLogo: preference.whiteLogo,
+                        },
+                        address: preference.address,
+                        facebookURL: preference.facebookURL,
+                        youtubeURL: preference.youtubeURL,
+                        twitterURL: preference.twitterURL,
+                        whatsapp: preference.whatsapp,
+                        linkedinURL: preference.linkedinURL,
+                        pinterestURL: preference.pinterestURL,
+                        instagramURL: preference.instagramURL,
+                        githubURL: preference.githubURL,
+                        primaryContactNumber: preference.primaryContactNumber,
+                        secondaryContactNumber:
+                            preference.secondaryContactNumber,
+                        primaryEmail: preference.primaryEmail,
+                        secondaryEmail: preference.secondaryEmail,
+                    },
+                })
+            );
+        } else {
+            res.status(500).json(
+                response({ code: 500, message: "Internal Server Error!" })
+            );
+        }
+    } catch (error) {
+        res.status(500).json(response({ code: 500, message: error.message }));
+    }
+});
 
-export { updatePreference };
+export { updatePreference, getPreference };
