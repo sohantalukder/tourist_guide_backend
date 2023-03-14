@@ -18,7 +18,11 @@ const preferencesSchema = new mongoose.Schema({
         max: "255",
         default: null,
     },
-    logo: {
+    blackLogo: {
+        type: String,
+        default: null,
+    },
+    whiteLogo: {
         type: String,
         default: null,
     },
