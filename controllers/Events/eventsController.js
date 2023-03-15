@@ -38,16 +38,16 @@ const createEvent = asyncHandler(async (req, res) => {
             image: cloudImage.secure_url,
             creatorId,
         });
-        res.status(200).json(
+        res.status(201).json(
             response({
-                code: 200,
+                code: 201,
                 message: "Successfully created event",
             })
         );
     } catch (error) {
-        res.status(401).json(
+        res.status(500).json(
             response({
-                code: 401,
+                code: 500,
                 message: error.message,
             })
         );
@@ -113,9 +113,9 @@ const updateEventInfo = asyncHandler(async (req, res) => {
             );
         }
     } catch (error) {
-        res.status(401).json(
+        res.status(500).json(
             response({
-                code: 401,
+                code: 500,
                 message: error.message,
             })
         );

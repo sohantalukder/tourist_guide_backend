@@ -14,6 +14,7 @@ import userRoutes from "./routes/Auth/userRoute.js";
 import adminRoutes from "./routes/Admin/adminRoutes.js";
 import eventRoutes from "./routes/Events/eventRoutes.js";
 import preferenceRoutes from "./routes/Preferences/preferencesRoute.js";
+import blogRoutes from "./routes/Blog/blogRoutes.js";
 
 app.use(express.json());
 app.use(cookieParser());
@@ -22,6 +23,7 @@ app.use("/api/v1/preference", preferenceRoutes);
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/event", eventRoutes);
+app.use("/api/v1/blog", blogRoutes);
 app.use(express.static(path.join("http://localhost:3000/")));
 app.get("*", (req, res) => {
     res.sendFile(path.resolve("http://localhost:3000/"));

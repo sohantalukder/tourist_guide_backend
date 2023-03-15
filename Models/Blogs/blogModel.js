@@ -6,7 +6,20 @@ const blogSchema = mongoose.Schema({
         required: true,
         default: null,
     },
-    image: { type: String, default: null },
+    creatorName: {
+        type: String,
+        default: null,
+    },
+    creatorLocation: {
+        type: String,
+    },
+    creatorImage: { type: String },
+    title: {
+        type: String,
+        default: null,
+        maxLength: [255, "Title cannot exceed 255 characters"],
+    },
+    images: { type: Array, default: null },
     description: {
         type: String,
         required: true,
@@ -18,4 +31,5 @@ const blogSchema = mongoose.Schema({
     createAt: { type: Date, default: Date.now },
 });
 
-export default blogSchema;
+const Blog = mongoose.model("blogs", blogSchema);
+export default Blog;
