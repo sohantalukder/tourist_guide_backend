@@ -1,5 +1,5 @@
 import express from "express";
-import { createBlog } from "../../controllers/Blog/BlogController.js";
+import { createBlog } from "../../controllers/Blog/blogController.js";
 import { protect, verifiedEmail } from "../../middleware/authMiddleware.js";
 import { upload } from "../../middleware/multer.js";
 const router = express.Router();
