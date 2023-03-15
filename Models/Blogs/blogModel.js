@@ -1,25 +1,35 @@
 import mongoose from "mongoose";
-
-const blogSchema = mongoose.Schema(
-    {
-        image: { type: String, required: false },
-        user: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-            ref: "User",
-        },
-        description: { type: String, required: true },
-        rating: { type: Number, required: true },
-        comment: { type: String, required: true },
-        commentUser: {
-            type: mongoose.Schema.Types.ObjectId,
-            required: true,
-            ref: "commentUser",
-        },
+import commentSchema from "./Comments/CommentsSchema.js";
+const blogSchema = mongoose.Schema({
+    creatorId: {
+        type: String,
+        required: true,
+        default: null,
     },
-    {
-        timestamps: true,
-    }
-);
+    creatorName: {
+        type: String,
+        default: null,
+    },
+    creatorLocation: {
+        type: String,
+    },
+    creatorImage: { type: String },
+    title: {
+        type: String,
+        default: null,
+        maxLength: [255, "Title cannot exceed 255 characters"],
+    },
+    images: { type: Array, default: null },
+    description: {
+        type: String,
+        required: true,
+        default: null,
+        maxLength: [1200, "Description cannot exceed 1200 characters"],
+    },
+    react: { type: Number, required: true, default: 0 },
+    comments: { commentSchema },
+    createAt: { type: Date, default: Date.now },
+});
 
-export default blogSchema;
+const Blog = mongoose.model("blogs", blogSchema);
+export default Blog;
