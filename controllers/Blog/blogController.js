@@ -3,6 +3,7 @@ import cloudinary from "cloudinary";
 import getDataURI from "../../utlis/dataUri.js";
 import { response } from "../../utlis/generateResponse.js";
 import Blog from "../../Models/Blogs/blogModel.js";
+import { getImageName } from "../../utlis/getImageName.js";
 
 const createBlog = asyncHandler(async (req, res) => {
     try {
@@ -16,9 +17,9 @@ const createBlog = asyncHandler(async (req, res) => {
         for (const file of files) {
             const imagePath = await getDataURI(file);
             const cloudImage = await cloudinary.v2.uploader.upload(
-                imagePath.content
+                imagePath.content,
+                { public_id: file?.originalname?.split(".")[0] }
             );
-            console.log(cloudImage.secure_url);
             imagesURL.push(cloudImage.secure_url);
         }
         await Blog.create({
@@ -45,5 +46,93 @@ const createBlog = asyncHandler(async (req, res) => {
         );
     }
 });
+const allBlogList = asyncHandler(async (req, res) => {});
+const updateBlog = asyncHandler(async (req, res) => {
+    try {
+        const blog = await Blog.findOne({ _id: req.params.id });
+        const { description, title, updateImageIndex, deleteImageIndex } =
+            req.body;
+        const files = req.files;
+        if (blog) {
+            if (blog.creatorId == req.user._id) {
+                let index = 0;
+                if (files?.length > 0) {
+                    for (const file of files) {
+                        if (updateImageIndex) {
+                            const imagePath = await getDataURI(file);
+                            const cloudImage =
+                                await cloudinary.v2.uploader.upload(
+                                    imagePath.content,
+                                    {
+                                        public_id:
+                                            file?.originalname?.split(".")[0],
+                                    }
+                                );
+                            if (
+                                cloudImage?.secure_url &&
+                                cloudImage?.secure_url !==
+                                    getImageName(
+                                        blog.images[updateImageIndex[index]]
+                                    )
+                            ) {
+                                await cloudinary.v2.uploader.destroy(
+                                    getImageName(
+                                        blog.images[updateImageIndex[index]]
+                                    )
+                                );
+                            }
 
-export { createBlog };
+                            blog.images[updateImageIndex[index]] =
+                                cloudImage.secure_url;
+                            index++;
+                        } else {
+                            const imagePath = await getDataURI(file);
+                            const cloudImage =
+                                await cloudinary.v2.uploader.upload(
+                                    imagePath.content,
+                                    {
+                                        public_id:
+                                            file?.originalname?.split(".")[0],
+                                    }
+                                );
+                            blog.images.push(cloudImage.secure_url);
+                        }
+                    }
+                }
+                if (deleteImageIndex) {
+                    for (const index of deleteImageIndex) {
+                        await cloudinary.v2.uploader.destroy(
+                            getImageName(blog.images[index])
+                        );
+                        blog.images?.splice(index, 1);
+                    }
+                }
+                blog.description = description || blog.description;
+                blog.title = title || blog.title;
+                blog.images = blog.images;
+                await blog.save();
+                res.status(200).json(
+                    response({
+                        code: 200,
+                        message: "Successfully updated blog details!",
+                    })
+                );
+            } else {
+                res.status(401).json(
+                    response({
+                        code: 401,
+                        message: "You are not able to update this blog!",
+                    })
+                );
+            }
+        } else {
+            res.status(404).json(
+                response({ code: 404, message: "Blog not found!" })
+            );
+        }
+    } catch (error) {
+        res.status(500).json(response({ code: 500, message: error.message }));
+    }
+});
+
+export { createBlog, updateBlog };

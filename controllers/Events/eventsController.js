@@ -23,7 +23,8 @@ const createEvent = asyncHandler(async (req, res) => {
         const creatorId = req.user._id;
         const imageURI = await getDataURI(image);
         const cloudImage = await cloudinary.v2.uploader.upload(
-            imageURI.content
+            imageURI.content,
+            { public_id: image?.originalname?.split(".")[0] }
         );
         await Events.create({
             name,
@@ -103,9 +104,9 @@ const updateEventInfo = asyncHandler(async (req, res) => {
                     })
                 );
             } else {
-                res.status(400).json(
+                res.status(401).json(
                     response({
-                        code: 400,
+                        code: 401,
                         message: "You are not able update events details.",
                     })
                 );
