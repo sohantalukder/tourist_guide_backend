@@ -4,6 +4,7 @@ import getDataURI from "../../utlis/dataUri.js";
 
 import { response } from "../../utlis/generateResponse.js";
 import cloudinary from "cloudinary";
+import { getImageName } from "../../utlis/getImageName.js";
 const updatePreference = asyncHandler(async (req, res) => {
     try {
         const {
@@ -25,6 +26,7 @@ const updatePreference = asyncHandler(async (req, res) => {
         } = req.body;
         const logos = req.files;
         let blackLogoResult, whiteLogoResult;
+        const preference = await Preferences.findOne();
         if (logos?.length > 0) {
             const blackLogo = logos.find(
                 (logo) => logo?.fieldname === "blackLogo"
@@ -32,20 +34,32 @@ const updatePreference = asyncHandler(async (req, res) => {
             const whiteLogo = logos.find(
                 (logo) => logo?.fieldname === "whiteLogo"
             );
+            console.log(blackLogo);
             if (blackLogo) {
                 const blackLogoURI = await getDataURI(blackLogo);
                 blackLogoResult = await cloudinary.v2.uploader.upload(
-                    blackLogoURI.content
+                    blackLogoURI.content,
+                    { public_id: blackLogo?.originalname?.split(".")[0] }
                 );
+                if (blackLogoResult?.secure_url) {
+                    cloudinary.v2.uploader.destroy(
+                        getImageName(preference.blackLogo)
+                    );
+                }
             }
             if (whiteLogo) {
                 const whiteLogoURI = await getDataURI(whiteLogo);
                 whiteLogoResult = await cloudinary.v2.uploader.upload(
-                    whiteLogoURI.content
+                    whiteLogoURI.content,
+                    { public_id: whiteLogo?.originalname?.split(".")[0] }
                 );
+                if (whiteLogoResult?.secure_url) {
+                    cloudinary.v2.uploader.destroy(
+                        getImageName(preference.whiteLogo)
+                    );
+                }
             }
         }
-        const preference = await Preferences.findOne();
         preference.website_name = website_name || preference.website_name;
         preference.website_keywords =
             website_keywords || preference.website_keywords;

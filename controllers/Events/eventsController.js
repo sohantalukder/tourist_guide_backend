@@ -4,6 +4,7 @@ import getDataURI from "../../utlis/dataUri.js";
 import { response } from "../../utlis/generateResponse.js";
 import Events from "../../Models/Events/eventsModel.js";
 import User from "../../Models/User/userModel.js";
+import { getImageName } from "../../utlis/getImageName.js";
 const createEvent = asyncHandler(async (req, res) => {
     try {
         const {
@@ -22,7 +23,8 @@ const createEvent = asyncHandler(async (req, res) => {
         const creatorId = req.user._id;
         const imageURI = await getDataURI(image);
         const cloudImage = await cloudinary.v2.uploader.upload(
-            imageURI.content
+            imageURI.content,
+            { public_id: image?.originalname?.split(".")[0] }
         );
         await Events.create({
             name,
@@ -76,6 +78,11 @@ const updateEventInfo = asyncHandler(async (req, res) => {
                     const cloudImage = await cloudinary.v2.uploader.upload(
                         imageURI.content
                     );
+                    if (cloudImage?.secure_url) {
+                        cloudinary.v2.uploader.destroy(
+                            getImageName(event?.image)
+                        );
+                    }
                     event.image = cloudImage.secure_url || event.image;
                 }
                 event.name = name || event.name;
@@ -97,9 +104,9 @@ const updateEventInfo = asyncHandler(async (req, res) => {
                     })
                 );
             } else {
-                res.status(400).json(
+                res.status(401).json(
                     response({
-                        code: 400,
+                        code: 401,
                         message: "You are not able update events details.",
                     })
                 );
@@ -160,6 +167,9 @@ const deleteEvent = asyncHandler(async (req, res) => {
     if (event) {
         if (event.creatorId == req.user._id) {
             await event.remove();
+            if (event?.image) {
+                cloudinary.v2.uploader.destroy(getImageName(event?.image));
+            }
             res.status(200).json(
                 response({ code: 200, message: "Event deleted Successfully" })
             );

@@ -10,6 +10,7 @@ import UserOtpVerification from "../../Models/User/otpVerificationModel.js";
 import getDataURI from "../../utlis/dataUri.js";
 import { resetPasswordEmailTemplate } from "../../utlis/resetPasswordEmailTemplate.js";
 import resetOtp from "../../Models/User/resetOTPModel.js";
+import { getImageName } from "../../utlis/getImageName.js";
 
 let transporter = nodemailer.createTransport({
     host: "smtp-relay.sendinblue.com",
@@ -343,8 +344,12 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
             const image = req.files[0];
             const imageURI = await getDataURI(image);
             const cloudImage = await cloudinary.v2.uploader.upload(
-                imageURI.content
+                imageURI.content,
+                { public_id: image?.originalname?.split(".")[0] }
             );
+            if (cloudImage?.secure_url) {
+                cloudinary.v2.uploader.destroy(getImageName(user?.image));
+            }
             user.image = cloudImage.secure_url || user.image;
             await user.save();
             res.status(200).json(
@@ -359,7 +364,7 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
             );
         }
     } catch (error) {
-        res.status(404).json(response({ code: 404, message: error.message }));
+        res.status(500).json(response({ code: 500, message: error.message }));
     }
 });
 const changePassword = asyncHandler(async (req, res) => {
