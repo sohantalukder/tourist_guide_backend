@@ -46,7 +46,41 @@ const createBlog = asyncHandler(async (req, res) => {
         );
     }
 });
-const allBlogList = asyncHandler(async (req, res) => {});
+const allBlogsList = asyncHandler(async (req, res) => {
+    try {
+        const pageSize = 10;
+        const page = Number(req.query.page) || 1;
+        const sortbyID = { _id: -1 };
+        const sortByRating = { react: -1 };
+        const keyword = req.query.keyword
+            ? {
+                  name: {
+                      $regex: req.query.keyword,
+                      $options: "i",
+                  },
+              }
+            : {};
+
+        const count = await Blog.countDocuments({ ...keyword });
+        const blogs = await Blog.find({ ...keyword })
+            .sort(sortByRating)
+            .sort(sortbyID)
+            .skip(pageSize * (page - 1));
+        res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    blogs,
+                    PageNumber: page,
+                    Pages: Math.ceil(count / pageSize),
+                },
+            })
+        );
+    } catch (error) {
+        res.status(500).json(response({ code: 500, message: error.message }));
+    }
+});
 const updateBlog = asyncHandler(async (req, res) => {
     try {
         const blog = await Blog.findOne({ _id: req.params.id });
@@ -54,7 +88,7 @@ const updateBlog = asyncHandler(async (req, res) => {
             req.body;
         const files = req.files;
         if (blog) {
-            if (blog.creatorId == req.user._id) {
+            if (blog.creatorId == req.user._id || req.user.role === "admin") {
                 let index = 0;
                 if (files?.length > 0) {
                     for (const file of files) {
@@ -134,5 +168,38 @@ const updateBlog = asyncHandler(async (req, res) => {
         res.status(500).json(response({ code: 500, message: error.message }));
     }
 });
+const userBlogsList = asyncHandler(async (req, res) => {
+    try {
+        const pageSize = 10;
+        const page = Number(req.query.page) || 1;
+        const sortbyID = { _id: -1 };
+        const keyword = req.query.keyword
+            ? {
+                  name: {
+                      $regex: req.query.keyword,
+                      $options: "i",
+                  },
+              }
+            : {};
 
-export { createBlog, updateBlog };
+        const count = await Blog.countDocuments({ ...keyword });
+        const blogs = await Blog.find({ creatorId: req.user._id, ...keyword })
+            .sort(sortbyID)
+            .skip(pageSize * (page - 1));
+        res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    blogs,
+                    PageNumber: page,
+                    Pages: Math.ceil(count / pageSize),
+                },
+            })
+        );
+    } catch (error) {
+        res.status(500).json(response({ code: 500, message: error.message }));
+    }
+});
+
+export { createBlog, updateBlog, userBlogsList, allBlogsList };
