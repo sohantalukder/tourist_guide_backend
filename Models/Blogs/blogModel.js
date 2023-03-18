@@ -28,7 +28,8 @@ const blogSchema = mongoose.Schema({
     },
     react: { type: Number, required: true, default: 0 },
     comments: { commentSchema },
-    createAt: { type: Date, default: Date.now },
+    createAt: { type: Date },
+    updatedAt: { type: Date },
 });
 
 const Blog = mongoose.model("blogs", blogSchema);

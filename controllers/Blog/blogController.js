@@ -30,6 +30,7 @@ const createBlog = asyncHandler(async (req, res) => {
             creatorLocation,
             description,
             images: imagesURL,
+            createAt: Date.now(),
         });
         res.status(201).json(
             response({
@@ -144,6 +145,7 @@ const updateBlog = asyncHandler(async (req, res) => {
                 blog.description = description || blog.description;
                 blog.title = title || blog.title;
                 blog.images = blog.images;
+                blog.updatedAt = Date.now();
                 await blog.save();
                 res.status(200).json(
                     response({
@@ -201,5 +203,37 @@ const userBlogsList = asyncHandler(async (req, res) => {
         res.status(500).json(response({ code: 500, message: error.message }));
     }
 });
+const deleteBlog = asyncHandler(async (req, res) => {
+    try {
+        const blog = await Blog.findOne({ _id: req.params.id });
 
-export { createBlog, updateBlog, userBlogsList, allBlogsList };
+        if (blog) {
+            if (blog.creatorId == req.user._id || req.user.role === "admin") {
+                for (const image of blog.images) {
+                    await cloudinary.v2.uploader.destroy(getImageName(image));
+                }
+                await blog.remove();
+                res.status(200).json(
+                    response({
+                        code: 200,
+                        message: "Successfully delete this blog!",
+                    })
+                );
+            } else {
+                res.status(401).json(
+                    response({
+                        code: 401,
+                        message: "You are not able to delete this blog!",
+                    })
+                );
+            }
+        } else {
+            res.status(404).json(
+                response({ code: 404, message: "Blog not found!" })
+            );
+        }
+    } catch (error) {
+        res.status(500).json(response({ code: 500, message: error.message }));
+    }
+});
+export { createBlog, updateBlog, userBlogsList, allBlogsList, deleteBlog };
