@@ -36,5 +36,45 @@ const addDivision = asyncHandler(async (req, res) => {
         );
     }
 });
+const editDivision = asyncHandler(async (req, res) => {
+    try {
+        const id = req.params.code;
+        const { name, code, geocode } = req.body;
+        const division = await Divisions.findOne({ division_code: id });
+        if (division) {
+            await Divisions.create({
+                name,
+                division_code: code,
+                geocode,
+                createdAt: Date.now(),
+            });
+            (division.name = name),
+                (division.division_code = code),
+                (division.geocode = geocode),
+                (division.updatedAt = Date.now());
+            await division.save();
+            res.status(202).json(
+                response({
+                    code: 202,
+                    message: "Successfully division updated!",
+                })
+            );
+        } else {
+            res.status(404).json(
+                response({
+                    code: 404,
+                    message: "Division not found!",
+                })
+            );
+        }
+    } catch (error) {
+        res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
 
-export { addDivision };
+export { addDivision, editDivision };
