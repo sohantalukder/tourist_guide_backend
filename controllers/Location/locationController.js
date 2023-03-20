@@ -42,15 +42,9 @@ const editDivision = asyncHandler(async (req, res) => {
         const { name, code, geocode } = req.body;
         const division = await Divisions.findOne({ division_code: id });
         if (division) {
-            await Divisions.create({
-                name,
-                division_code: code,
-                geocode,
-                createdAt: Date.now(),
-            });
-            (division.name = name),
-                (division.division_code = code),
-                (division.geocode = geocode),
+            (division.name = name || division.name),
+                (division.division_code = code || division.division_code),
+                (division.geocode = geocode || division.geocode),
                 (division.updatedAt = Date.now());
             await division.save();
             res.status(202).json(
