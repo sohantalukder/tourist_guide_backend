@@ -23,7 +23,7 @@ const Upazilas = mongoose.Schema({
         default: null,
     },
     createdAt: Date,
-    expiredAt: Date,
+    updatedAt: Date,
 });
 
 export default Upazilas;

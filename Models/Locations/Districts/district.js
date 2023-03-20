@@ -21,7 +21,7 @@ const Districts = mongoose.Schema({
     },
     upazilas: [Upazilas],
     createdAt: Date,
-    expiredAt: Date,
+    updatedAt: Date,
 });
 
 export default Districts;

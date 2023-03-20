@@ -17,7 +17,7 @@ const divisionSchema = mongoose.Schema({
     },
     districts: [Districts],
     createdAt: Date,
-    expiredAt: Date,
+    updatedAt: Date,
 });
 
 const Divisions = mongoose.model("divisions", divisionSchema);
