@@ -49,7 +49,7 @@ const createBlog = asyncHandler(async (req, res) => {
 });
 const allBlogsList = asyncHandler(async (req, res) => {
     try {
-        const pageSize = 10;
+        const pageSize = Number(req.query.pageSize) || 10;
         const page = Number(req.query.page) || 1;
         const sortbyID = { _id: -1 };
         const sortByRating = { react: -1 };
@@ -67,12 +67,32 @@ const allBlogsList = asyncHandler(async (req, res) => {
             .sort(sortByRating)
             .sort(sortbyID)
             .skip(pageSize * (page - 1));
+        const manipulateBlogs = (blogs) => {
+            return blogs?.length > 0
+                ? blogs.map((blog) => {
+                      return {
+                          id: blog.id,
+                          creatorInfo: {
+                              id: blog.creatorId,
+                              name: blog.creatorName,
+                              image: blog.creatorImage,
+                              location: blog.creatorLocation,
+                          },
+                          title: blog.title,
+                          images: blog.images,
+                          description: blog.description,
+                          react: blog.react,
+                          createdAt: blog.createAt,
+                      };
+                  })
+                : [];
+        };
         res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
                 records: {
-                    blogs,
+                    blogs: manipulateBlogs(blogs),
                     PageNumber: page,
                     Pages: Math.ceil(count / pageSize),
                 },
@@ -172,7 +192,7 @@ const updateBlog = asyncHandler(async (req, res) => {
 });
 const userBlogsList = asyncHandler(async (req, res) => {
     try {
-        const pageSize = 10;
+        const pageSize = Number(req.query.pageSize) || 10;
         const page = Number(req.query.page) || 1;
         const sortbyID = { _id: -1 };
         const keyword = req.query.keyword
@@ -188,12 +208,32 @@ const userBlogsList = asyncHandler(async (req, res) => {
         const blogs = await Blog.find({ creatorId: req.user._id, ...keyword })
             .sort(sortbyID)
             .skip(pageSize * (page - 1));
+        const manipulateBlogs = (blogs) => {
+            return blogs?.length > 0
+                ? blogs.map((blog) => {
+                      return {
+                          id: blog.id,
+                          creatorInfo: {
+                              id: blog.creatorId,
+                              name: blog.creatorName,
+                              image: blog.creatorImage,
+                              location: blog.creatorLocation,
+                          },
+                          title: blog.title,
+                          images: blog.images,
+                          description: blog.description,
+                          react: blog.react,
+                          createdAt: blog.createAt,
+                      };
+                  })
+                : [];
+        };
         res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
                 records: {
-                    blogs,
+                    blogs: manipulateBlogs(blogs),
                     PageNumber: page,
                     Pages: Math.ceil(count / pageSize),
                 },
@@ -236,4 +276,94 @@ const deleteBlog = asyncHandler(async (req, res) => {
         res.status(500).json(response({ code: 500, message: error.message }));
     }
 });
-export { createBlog, updateBlog, userBlogsList, allBlogsList, deleteBlog };
+const getBlogById = asyncHandler(async (req, res) => {
+    try {
+        const blog = await Blog.findById(req.params.id);
+        if (blog) {
+            const manipulateComment = (comments) => {
+                return comments?.length > 0
+                    ? comments.map((comment) => {
+                          return {
+                              commentUserInfo: {
+                                  id: comment.commentatorId,
+                                  name: comment.commentatorName,
+                              },
+                              comment: comment.comment,
+                              createdAt: comment.createAt,
+                          };
+                      })
+                    : [];
+            };
+            res.status(200).json(
+                response({
+                    code: 200,
+                    message: "Ok",
+                    records: {
+                        id: blog._id,
+                        creatorInfo: {
+                            id: blog.creatorId,
+                            name: blog.creatorName,
+                            image: blog.creatorImage,
+                            location: blog.creatorLocation,
+                        },
+                        title: blog.title,
+                        images: blog.images,
+                        description: blog.description,
+                        react: blog.react,
+                        createAt: blog.createAt,
+                        comments: manipulateComment(blog.comments),
+                    },
+                })
+            );
+        } else {
+            res.status(404).json(
+                response({ code: 404, message: "Blog not found!" })
+            );
+        }
+    } catch (error) {
+        res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
+const createBlogComment = asyncHandler(async (req, res) => {
+    try {
+        const { comment } = req.body;
+        const blog = await Blog.findById(req.params.id);
+        if (blog) {
+            const newComment = {
+                commentatorId: req.user.id,
+                commentatorName: req.user.name,
+                comment: comment,
+            };
+            blog.comments.push(newComment);
+            await blog.save();
+            res.status(201).json(
+                response({ code: 201, message: "Comment Added!" })
+            );
+        } else {
+            res.status(404).json(
+                response({ code: 404, message: "Blog not found!" })
+            );
+        }
+    } catch (error) {
+        res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
+export {
+    createBlog,
+    updateBlog,
+    userBlogsList,
+    allBlogsList,
+    deleteBlog,
+    createBlogComment,
+    getBlogById,
+};
