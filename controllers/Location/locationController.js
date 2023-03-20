@@ -5,18 +5,28 @@ import { response } from "../../utlis/generateResponse.js";
 const addDivision = asyncHandler(async (req, res) => {
     try {
         const { name, code, geocode } = req.body;
-        await Divisions.create({
-            name,
-            division_code: code,
-            geocode,
-            createdAt: Date.now(),
-        });
-        res.status(201).json(
-            response({
-                code: 201,
-                message: "Successfully add division!",
-            })
-        );
+        const division = await Divisions.findOne({ division_code: code });
+        if (division) {
+            res.status(400).json(
+                response({
+                    code: 400,
+                    message: "This division has been already created!",
+                })
+            );
+        } else {
+            await Divisions.create({
+                name,
+                division_code: code,
+                geocode,
+                createdAt: Date.now(),
+            });
+            res.status(201).json(
+                response({
+                    code: 201,
+                    message: "Successfully add division!",
+                })
+            );
+        }
     } catch (error) {
         res.status(500).json(
             response({
