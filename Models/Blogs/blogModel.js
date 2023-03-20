@@ -27,7 +27,7 @@ const blogSchema = mongoose.Schema({
         maxLength: [1200, "Description cannot exceed 1200 characters"],
     },
     react: { type: Number, required: true, default: 0 },
-    comments: { commentSchema },
+    comments: [commentSchema],
     createAt: { type: Date },
     updatedAt: { type: Date },
 });

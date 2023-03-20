@@ -2,7 +2,6 @@ import asyncHandler from "express-async-handler";
 import User from "../../Models/User/userModel.js";
 import { response } from "../../utlis/generateResponse.js";
 import generateToken from "../../utlis/generateToken.js";
-import nodemailer from "nodemailer";
 import cloudinary from "cloudinary";
 import UserOptVerification from "../../Models/User/otpVerificationModel.js";
 import { emailTemplate } from "../../utlis/emailTemplate.js";
@@ -11,15 +10,7 @@ import getDataURI from "../../utlis/dataUri.js";
 import { resetPasswordEmailTemplate } from "../../utlis/resetPasswordEmailTemplate.js";
 import resetOtp from "../../Models/User/resetOTPModel.js";
 import { getImageName } from "../../utlis/getImageName.js";
-
-let transporter = nodemailer.createTransport({
-    host: "smtp-relay.sendinblue.com",
-    port: 587,
-    auth: {
-        user: "tourists.guides2@gmail.com",
-        pass: "1KrAdqIWQwzGt3Jp",
-    },
-});
+import { transporter } from "../../utlis/SMTP_Config.js";
 
 const authUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
@@ -214,7 +205,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
                         });
                         getUser.emailVerify = true;
                         const updatedUser = await getUser.save();
-                        res.status(200).json(
+                        res.status(201).json(
                             response({
                                 code: 201,
                                 message: "User email verified successfully",
@@ -431,9 +422,9 @@ const sendOTPResetPassword = async ({ user, res }) => {
             })
         );
     } catch (error) {
-        res.status(401).json(
+        res.status(500).json(
             response({
-                code: 401,
+                code: 500,
                 message: error.message,
             })
         );
@@ -453,7 +444,7 @@ const resetPassword = asyncHandler(async (req, res) => {
             );
         }
     } catch (error) {
-        res.status(400).json(response({ code: 400, message: error.message }));
+        res.status(500).json(response({ code: 500, message: error.message }));
     }
 });
 
@@ -519,9 +510,9 @@ const verifyResetPassword = asyncHandler(async (req, res) => {
             }
         }
     } catch (error) {
-        res.status(401).json(
+        res.status(500).json(
             response({
-                code: 401,
+                code: 500,
                 message: error.message,
             })
         );
@@ -572,7 +563,7 @@ const storeResetPassword = asyncHandler(async (req, res) => {
             }
         }
     } catch (error) {
-        res.json(400).json(response({ code: 400, message: error.message }));
+        res.json(500).json(response({ code: 500, message: error.message }));
     }
 });
 export {
