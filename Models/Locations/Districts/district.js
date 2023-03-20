@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Upazilas from "./Upazilas/Upazilas";
+import Upazilas from "./Upazilas/upazilas.js";
 
 const Districts = mongoose.Schema({
     name: {

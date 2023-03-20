@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Districts from "./Districts/district";
+import Districts from "./Districts/district.js";
 
 const divisionSchema = mongoose.Schema({
     name: {
