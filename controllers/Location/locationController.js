@@ -70,5 +70,34 @@ const editDivision = asyncHandler(async (req, res) => {
         );
     }
 });
+const deleteDivision = asyncHandler(async (req, res) => {
+    try {
+        const id = req.params.code;
+        const division = await Divisions.findOne({ division_code: id });
+        if (division) {
+            await division.remove();
+            res.status(200).json(
+                response({
+                    code: 200,
+                    message: "Successfully division deleted!",
+                })
+            );
+        } else {
+            res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+    } catch (error) {
+        res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
 
-export { addDivision, editDivision };
+export { addDivision, editDivision, deleteDivision };
