@@ -10,7 +10,7 @@ import getDataURI from "../../utlis/dataUri.js";
 import { resetPasswordEmailTemplate } from "../../utlis/resetPasswordEmailTemplate.js";
 import resetOtp from "../../Models/User/resetOTPModel.js";
 import { getImageName } from "../../utlis/getImageName.js";
-import { transporter } from "../../utlis/SMTP_Config.js";
+import { transporter } from "../../config/SMTP_Config.js";
 
 const authUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
