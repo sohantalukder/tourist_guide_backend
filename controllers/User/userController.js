@@ -140,7 +140,7 @@ const sendOTPVerificationEmail = async ({ user, res }) => {
             expiredAt: Date.now() + 3000000,
         });
         await newOTPVerification.save();
-        await transporter.sendMail(mailOptions);
+        await transporter().sendMail(mailOptions);
         res.status(202).json(
             response({
                 code: 202,
@@ -298,9 +298,9 @@ const resendVerifyOTP = asyncHandler(async (req, res) => {
             );
         }
     } catch (error) {
-        res.status(401).json(
+        res.status(500).json(
             response({
-                code: 401,
+                code: 500,
                 message: error.message,
             })
         );
@@ -398,9 +398,9 @@ const changePassword = asyncHandler(async (req, res) => {
             );
         }
     } catch (error) {
-        res.status(400).json(
+        res.status(500).json(
             response({
-                code: 400,
+                code: 500,
                 message: error.message,
             })
         );

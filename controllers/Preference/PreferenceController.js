@@ -34,7 +34,6 @@ const updatePreference = asyncHandler(async (req, res) => {
             const whiteLogo = logos.find(
                 (logo) => logo?.fieldname === "whiteLogo"
             );
-            console.log(blackLogo);
             if (blackLogo) {
                 const blackLogoURI = await getDataURI(blackLogo);
                 blackLogoResult = await cloudinary.v2.uploader.upload(
