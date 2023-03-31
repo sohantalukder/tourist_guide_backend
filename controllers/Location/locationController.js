@@ -10,7 +10,7 @@ const addDivision = asyncHandler(async (req, res) => {
             return res.status(409).json(
                 response({
                     code: 409,
-                    message: "This division has already been created!",
+                    message: "This division has already been added!",
                 })
             );
         }
@@ -98,4 +98,52 @@ const deleteDivision = asyncHandler(async (req, res) => {
     }
 });
 
-export { addDivision, editDivision, deleteDivision };
+const addDistrict = asyncHandler(async (req, res) => {
+    const { name, division_code, district_code, geocode } = req.body;
+    try {
+        const division = await Divisions.findOne({
+            division_code: division_code,
+        });
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+        const district = division?.districts.find(
+            (district) => district?.district_code === district_code
+        );
+        if (district) {
+            return res.status(409).json(
+                response({
+                    code: 409,
+                    message: "This district has already been added!",
+                })
+            );
+        }
+        const newDistrict = {
+            name,
+            division_code,
+            district_code,
+            geocode,
+            createdAt: Date.now(),
+        };
+        division.districts.push(newDistrict);
+        await division.save();
+        return res
+            .status(201)
+            .json(
+                response({ code: 201, message: "Successfully district added!" })
+            );
+    } catch (err) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: err.message,
+            })
+        );
+    }
+});
+export { addDivision, editDivision, deleteDivision, addDistrict };
