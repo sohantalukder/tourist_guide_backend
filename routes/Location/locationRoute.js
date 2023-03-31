@@ -2,6 +2,7 @@ import express from "express";
 import {
     addDistrict,
     addDivision,
+    allDivisions,
     deleteDivision,
     editDivision,
 } from "../../controllers/Location/locationController.js";
@@ -9,6 +10,7 @@ import { admin, protect } from "../../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.route("/division/store").post(protect, admin, addDivision);
+router.route("/divisions").get(allDivisions);
 router.route("/district/store").post(protect, admin, addDistrict);
 router.route("/division/:code/update").put(protect, admin, editDivision);
 router.route("/division/:code/delete").delete(protect, admin, deleteDivision);

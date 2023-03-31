@@ -97,7 +97,36 @@ const deleteDivision = asyncHandler(async (req, res) => {
         );
     }
 });
-
+const allDivisions = asyncHandler(async (req, res) => {
+    try {
+        const sortbyID = { _id: -1 };
+        const divisions = await Divisions.find().sort(sortbyID);
+        const manipulateDivisions = (divisions) => {
+            return divisions?.length > 0
+                ? divisions.map((division) => {
+                      return {
+                          divisionCode: division.division_code,
+                          name: division.name,
+                      };
+                  })
+                : [];
+        };
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: manipulateDivisions(divisions),
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
 const addDistrict = asyncHandler(async (req, res) => {
     const { name, division_code, district_code, geocode } = req.body;
     try {
@@ -146,4 +175,4 @@ const addDistrict = asyncHandler(async (req, res) => {
         );
     }
 });
-export { addDivision, editDivision, deleteDivision, addDistrict };
+export { addDivision, editDivision, deleteDivision, addDistrict, allDivisions };
