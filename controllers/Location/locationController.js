@@ -3,66 +3,64 @@ import Divisions from "../../Models/Locations/divisions.js";
 import { response } from "../../utlis/generateResponse.js";
 
 const addDivision = asyncHandler(async (req, res) => {
+    const { name, code, geocode } = req.body;
     try {
-        const { name, code, geocode } = req.body;
         const division = await Divisions.findOne({ division_code: code });
         if (division) {
-            res.status(400).json(
+            return res.status(409).json(
                 response({
-                    code: 400,
-                    message: "This division has been already created!",
-                })
-            );
-        } else {
-            await Divisions.create({
-                name,
-                division_code: code,
-                geocode,
-                createdAt: Date.now(),
-            });
-            res.status(201).json(
-                response({
-                    code: 201,
-                    message: "Successfully add division!",
+                    code: 409,
+                    message: "This division has already been created!",
                 })
             );
         }
-    } catch (error) {
-        res.status(500).json(
+        await Divisions.create({
+            name,
+            division_code: code,
+            geocode,
+            createdAt: Date.now(),
+        });
+
+        return res.status(201).json(
+            response({
+                code: 201,
+                message: "Successfully added division!",
+            })
+        );
+    } catch (err) {
+        return res.status(500).json(
             response({
                 code: 500,
-                message: error.message,
+                message: err.message,
             })
         );
     }
 });
 const editDivision = asyncHandler(async (req, res) => {
+    const id = req.params.code;
+    const { name, code, geocode } = req.body;
     try {
-        const id = req.params.code;
-        const { name, code, geocode } = req.body;
-        const division = await Divisions.findOne({ division_code: id });
+        const division = await Divisions.findOneAndUpdate(
+            { division_code: id },
+            { name, division_code: code, geocode, updatedAt: Date.now() },
+            { new: true }
+        );
         if (division) {
-            (division.name = name || division.name),
-                (division.division_code = code || division.division_code),
-                (division.geocode = geocode || division.geocode),
-                (division.updatedAt = Date.now());
-            await division.save();
-            res.status(202).json(
+            return res.status(202).json(
                 response({
                     code: 202,
                     message: "Successfully division updated!",
                 })
             );
-        } else {
-            res.status(404).json(
-                response({
-                    code: 404,
-                    message: "Division not found!",
-                })
-            );
         }
+        return res.status(404).json(
+            response({
+                code: 404,
+                message: "Division not found!",
+            })
+        );
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
