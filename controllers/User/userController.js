@@ -10,7 +10,7 @@ import getDataURI from "../../utlis/dataUri.js";
 import { resetPasswordEmailTemplate } from "../../utlis/resetPasswordEmailTemplate.js";
 import resetOtp from "../../Models/User/resetOTPModel.js";
 import { getImageName } from "../../utlis/getImageName.js";
-import { transporter } from "../../utlis/SMTP_Config.js";
+import { transporter } from "../../config/SMTP_Config.js";
 
 const authUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
@@ -63,50 +63,62 @@ const duplicateEmailCheck = asyncHandler(async (req, res) => {
 });
 
 const registerUser = asyncHandler(async (req, res) => {
-    let { name, email, password } = req.body;
-    name = name.trim();
-    email = email.trim();
-    password = password.trim();
-    if (name === "" || email === "" || password === "") {
-        res.status(401).json(
-            response({ code: 401, message: "Empty input fields!" })
-        );
-    } else if (!/^[a-zA-z ]*$/.test(name)) {
-        res.status(401).json(
-            response({ code: 401, message: "Invalid name entered!" })
-        );
-    } else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-        res.status(401).json(
-            response({ code: 401, message: "Invalid email entered!" })
-        );
-    } else if (password.length < 8) {
-        res.status(401).json(
-            response({ code: 401, message: "Password is too short!" })
-        );
-    } else {
-        const userExists = await User.findOne({ email });
+    try {
+        let { name, email, password } = req.body;
+        name = name.trim();
+        email = email.trim();
+        password = password.trim();
 
-        if (userExists) {
-            res.status(401).json(
-                response({ code: 401, message: "User already exits" })
-            );
-        } else {
-            const user = await User.create({
-                name,
-                email,
-                password,
-            });
-            if (user) {
-                sendOTPVerificationEmail({
-                    user,
-                    res,
-                });
-            } else {
-                res.status(401).json(
-                    response({ code: 401, message: "Invalid user data" })
+        switch (true) {
+            case name === "" || email === "" || password === "":
+                return res
+                    .status(400)
+                    .json(
+                        response({ code: 400, message: "Empty input fields!" })
+                    );
+            case !/^[a-zA-z ]*$/.test(name):
+                return res.status(400).json(
+                    response({
+                        code: 400,
+                        message: "Invalid name entered!",
+                    })
                 );
-            }
+            case !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email):
+                return res
+                    .status(400)
+                    .json({ error: "Invalid email entered!" });
+            case password.length < 8:
+                return res.status(400).json(
+                    response({
+                        code: 400,
+                        message: "Password is too short!",
+                    })
+                );
+            default:
+                break;
         }
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res
+                .status(409)
+                .json(response({ code: 409, message: "User already exits" }));
+        }
+        const user = await User.create({
+            name,
+            email,
+            password,
+        });
+        if (!user) {
+            res.status(400).json(
+                response({ code: 400, message: "Invalid user data" })
+            );
+        }
+        sendOTPVerificationEmail({
+            user,
+            res,
+        });
+    } catch (error) {
+        res.status(500).json(response({ code: 500, message: error.message }));
     }
 });
 
@@ -128,7 +140,7 @@ const sendOTPVerificationEmail = async ({ user, res }) => {
             expiredAt: Date.now() + 3000000,
         });
         await newOTPVerification.save();
-        await transporter.sendMail(mailOptions);
+        await transporter().sendMail(mailOptions);
         res.status(202).json(
             response({
                 code: 202,
@@ -286,9 +298,9 @@ const resendVerifyOTP = asyncHandler(async (req, res) => {
             );
         }
     } catch (error) {
-        res.status(401).json(
+        res.status(500).json(
             response({
-                code: 401,
+                code: 500,
                 message: error.message,
             })
         );
@@ -386,9 +398,9 @@ const changePassword = asyncHandler(async (req, res) => {
             );
         }
     } catch (error) {
-        res.status(400).json(
+        res.status(500).json(
             response({
-                code: 400,
+                code: 500,
                 message: error.message,
             })
         );
