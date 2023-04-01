@@ -175,4 +175,61 @@ const addDistrict = asyncHandler(async (req, res) => {
         );
     }
 });
-export { addDivision, editDivision, deleteDivision, addDistrict, allDivisions };
+const updateDistrict = asyncHandler(async (req, res) => {
+    const { name, division_code, district_code, geocode } = req.body;
+    try {
+        const division = await Divisions.findOne({
+            division_code: division_code,
+        });
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+        const { districts } = division;
+        const index = districts.findIndex(
+            (district) => district?.district_code === district_code
+        );
+        if (!index) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Unable to find this district!",
+                })
+            );
+        }
+
+        districts[index] = {
+            name: name || districts[index]?.name,
+            division_code: division_code || districts[index]?.district_code,
+            district_code: district_code || districts[index]?.district_code,
+            geocode: geocode || districts[index]?.geocode,
+            updatedAt: Date.now(),
+        };
+        await division.save();
+        return res.status(202).json(
+            response({
+                code: 202,
+                message: "Successfully district updated!",
+            })
+        );
+    } catch (err) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: err.message,
+            })
+        );
+    }
+});
+export {
+    addDivision,
+    editDivision,
+    deleteDivision,
+    addDistrict,
+    allDivisions,
+    updateDistrict,
+};
