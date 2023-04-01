@@ -225,6 +225,57 @@ const updateDistrict = asyncHandler(async (req, res) => {
         );
     }
 });
+const allDistricts = asyncHandler(async (req, res) => {
+    try {
+        const division = await Divisions.findOne({
+            division_code: req.params.code,
+        });
+        const manipulateDistricts = (districts) => {
+            return districts?.length > 0
+                ? districts
+                      .map((district) => {
+                          return {
+                              name: district.name,
+                              division_code: district.division_code,
+                              district_code: district.district_code,
+                              geocode: district.geocode,
+                          };
+                      })
+                      .sort(function (a, b) {
+                          if (a.district_code < b.district_code) {
+                              return -1;
+                          }
+                          if (a.district_code > b.district_code) {
+                              return 1;
+                          }
+                          return 0;
+                      })
+                : [];
+        };
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Select valid division!",
+                })
+            );
+        }
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: manipulateDistricts(division?.districts),
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
 export {
     addDivision,
     editDivision,
@@ -232,4 +283,5 @@ export {
     addDistrict,
     allDivisions,
     updateDistrict,
+    allDistricts,
 };

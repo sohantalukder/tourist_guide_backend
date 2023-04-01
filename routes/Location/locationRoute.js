@@ -2,6 +2,7 @@ import express from "express";
 import {
     addDistrict,
     addDivision,
+    allDistricts,
     allDivisions,
     deleteDivision,
     editDivision,
@@ -12,7 +13,7 @@ const router = express.Router();
 
 router.route("/division/store").post(protect, admin, addDivision);
 router.route("/divisions").get(allDivisions);
-router.route("/district/:code/all").get(allDivisions);
+router.route("/district/:code/all").get(allDistricts);
 router.route("/district/store").post(protect, admin, addDistrict);
 router.route("/division/:code/update").put(protect, admin, editDivision);
 router.route("/district/:code/update").put(protect, admin, updateDistrict);
