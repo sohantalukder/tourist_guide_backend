@@ -1,16 +1,22 @@
+import { response } from "../utlis/generateResponse.js";
+
 const notFound = (req, res, next) => {
-    const error = new Error(`Not Found - ${req.originalUrl}`);
-    res.status(404);
-    next(error);
+    return res
+        .status(404)
+        .json(response({ code: 404, message: "Not found this URL!" }));
 };
 
 const errorHandler = (err, req, res, next) => {
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-    res.status(statusCode);
-    res.json({
-        message: err.message,
-        stack: process.env.NODE_ENV === "production" ? null : err.stack,
-    });
+    return res.status(statusCode).json(
+        response({
+            code: statusCode,
+            message: err.message,
+            records: {
+                stack: process.env.NODE_ENV === "production" ? null : err.stack,
+            },
+        })
+    );
 };
 
 export { notFound, errorHandler };
