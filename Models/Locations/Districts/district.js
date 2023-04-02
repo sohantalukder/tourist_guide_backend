@@ -13,6 +13,7 @@ const Districts = mongoose.Schema({
     district_code: {
         type: Number,
         required: true,
+        unique: true,
     },
     geocode: {
         type: String,

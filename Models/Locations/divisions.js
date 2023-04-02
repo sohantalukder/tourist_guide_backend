@@ -9,6 +9,7 @@ const divisionSchema = mongoose.Schema({
     division_code: {
         type: Number,
         required: true,
+        unique: true,
     },
     geocode: {
         type: String,

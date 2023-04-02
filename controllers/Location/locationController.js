@@ -5,15 +5,6 @@ import { response } from "../../utlis/generateResponse.js";
 const addDivision = asyncHandler(async (req, res) => {
     const { name, code, geocode } = req.body;
     try {
-        const division = await Divisions.findOne({ division_code: code });
-        if (division) {
-            return res.status(409).json(
-                response({
-                    code: 409,
-                    message: "This division has already been added!",
-                })
-            );
-        }
         await Divisions.create({
             name,
             division_code: code,
@@ -28,12 +19,21 @@ const addDivision = asyncHandler(async (req, res) => {
             })
         );
     } catch (err) {
-        return res.status(500).json(
-            response({
-                code: 500,
-                message: err.message,
-            })
-        );
+        if (err.code == "11000") {
+            return res.status(409).json(
+                response({
+                    code: 409,
+                    message: "This division has already been added!",
+                })
+            );
+        } else {
+            return res.status(500).json(
+                response({
+                    code: 500,
+                    message: err.message,
+                })
+            );
+        }
     }
 });
 const editDivision = asyncHandler(async (req, res) => {
@@ -177,10 +177,9 @@ const addDistrict = asyncHandler(async (req, res) => {
 });
 const updateDistrict = asyncHandler(async (req, res) => {
     const { name, division_code, district_code, geocode } = req.body;
+    const { code, districtCode } = req.params;
     try {
-        const division = await Divisions.findOne({
-            division_code: division_code,
-        });
+        const division = await Divisions.findOne({ division_code: code });
         if (!division) {
             return res.status(422).json(
                 response({
@@ -191,9 +190,9 @@ const updateDistrict = asyncHandler(async (req, res) => {
         }
         const { districts } = division;
         const index = districts.findIndex(
-            (district) => district?.district_code === district_code
+            (district) => district?.district_code == districtCode
         );
-        if (!index) {
+        if (index === -1) {
             return res.status(422).json(
                 response({
                     code: 422,
@@ -201,7 +200,6 @@ const updateDistrict = asyncHandler(async (req, res) => {
                 })
             );
         }
-
         districts[index] = {
             name: name || districts[index]?.name,
             division_code: division_code || districts[index]?.district_code,

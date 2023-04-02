@@ -16,6 +16,7 @@ const Upazilas = mongoose.Schema({
     postalCode: {
         type: Number,
         required: true,
+        unique: true,
     },
     geocode: {
         type: String,
