@@ -4,6 +4,7 @@ import {
     addDivision,
     allDistricts,
     allDivisions,
+    deleteDistrict,
     deleteDivision,
     editDivision,
     updateDistrict,
@@ -20,5 +21,8 @@ router
     .route("/division/:code/district/:districtCode/update")
     .put(protect, admin, updateDistrict);
 router.route("/division/:code/delete").delete(protect, admin, deleteDivision);
+router
+    .route("/division/:code/district/:districtCode")
+    .delete(protect, admin, deleteDistrict);
 
 export default router;

@@ -46,9 +46,9 @@ const editDivision = asyncHandler(async (req, res) => {
             { new: true }
         );
         if (division) {
-            return res.status(202).json(
+            return res.status(200).json(
                 response({
-                    code: 202,
+                    code: 200,
                     message: "Successfully division updated!",
                 })
             );
@@ -74,22 +74,21 @@ const deleteDivision = asyncHandler(async (req, res) => {
         const division = await Divisions.findOne({ division_code: id });
         if (division) {
             await division.remove();
-            res.status(200).json(
+            return res.status(200).json(
                 response({
                     code: 200,
                     message: "Successfully division deleted!",
                 })
             );
-        } else {
-            res.status(422).json(
-                response({
-                    code: 422,
-                    message: "Division doesn't exits!",
-                })
-            );
         }
+        return res.status(422).json(
+            response({
+                code: 422,
+                message: "Division doesn't exits!",
+            })
+        );
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -208,9 +207,9 @@ const updateDistrict = asyncHandler(async (req, res) => {
             updatedAt: Date.now(),
         };
         await division.save();
-        return res.status(202).json(
+        return res.status(200).json(
             response({
-                code: 202,
+                code: 200,
                 message: "Successfully district updated!",
             })
         );
@@ -274,6 +273,47 @@ const allDistricts = asyncHandler(async (req, res) => {
         );
     }
 });
+const deleteDistrict = asyncHandler(async (req, res) => {
+    try {
+        const { code, districtCode } = req.params;
+        const division = await Divisions.findOne({ division_code: code });
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+        // console.log(division?.districts);
+        const index = division?.districts.findIndex(
+            (district) => district?.district_code == districtCode
+        );
+        if (index === -1) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "District doesn't exits!",
+                })
+            );
+        }
+        division?.districts.splice(index, 1);
+        await division.save();
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "District successfully deleted!",
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
 export {
     addDivision,
     editDivision,
@@ -282,4 +322,5 @@ export {
     allDivisions,
     updateDistrict,
     allDistricts,
+    deleteDistrict,
 };
