@@ -285,7 +285,6 @@ const deleteDistrict = asyncHandler(async (req, res) => {
                 })
             );
         }
-        // console.log(division?.districts);
         const index = division?.districts.findIndex(
             (district) => district?.district_code == districtCode
         );
