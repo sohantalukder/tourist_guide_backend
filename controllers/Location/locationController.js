@@ -349,6 +349,8 @@ const addSubDistrict = asyncHandler(async (req, res) => {
     }
     district.upazilas.push({
         name,
+        division_code,
+        district_code,
         postalCode,
         geocode,
         createdAt: Date.now(),
@@ -417,6 +419,70 @@ const updateSubDistrict = asyncHandler(async (req, res) => {
         );
     }
 });
+const allSubDistrict = asyncHandler(async (req, res) => {
+    try {
+        const { code, districtCode } = req.params;
+        const division = await Divisions.findOne({
+            division_code: code,
+        });
+        const manipulateUpazilas = (upazilas) => {
+            return upazilas?.length > 0
+                ? upazilas
+                      .map((upazila) => {
+                          return {
+                              name: upazila.name,
+                              division_code: upazila.division_code,
+                              district_code: upazila.district_code,
+                              postalCode: upazila.postalCode,
+                              geocode: upazila.geocode,
+                          };
+                      })
+                      .sort(function (a, b) {
+                          if (a.postalCode < b.postalCode) {
+                              return -1;
+                          }
+                          if (a.postalCode > b.postalCode) {
+                              return 1;
+                          }
+                          return 0;
+                      })
+                : [];
+        };
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Select valid division!",
+                })
+            );
+        }
+        const district = division.districts.find(
+            (district) => district.district_code == districtCode
+        );
+        if (!district) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Unable to find this district!",
+                })
+            );
+        }
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: manipulateUpazilas(district?.upazilas),
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
 export {
     addDivision,
     editDivision,
@@ -428,4 +494,5 @@ export {
     deleteDistrict,
     addSubDistrict,
     updateSubDistrict,
+    allSubDistrict,
 };
