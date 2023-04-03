@@ -483,6 +483,57 @@ const allSubDistrict = asyncHandler(async (req, res) => {
         );
     }
 });
+const deleteSubDistrict = asyncHandler(async (req, res) => {
+    try {
+        const { code, districtCode, upazilaCode } = req.params;
+        const division = await Divisions.findOne({ division_code: code });
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+        const district = division?.districts.find(
+            (district) => district?.district_code == districtCode
+        );
+        if (!district) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "District doesn't exits!",
+                })
+            );
+        }
+        const upzilaIndex = district?.upazilas.findIndex(
+            (upazila) => upazila?.postalCode == upazilaCode
+        );
+        if (upzilaIndex === -1) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Upzila doesn't exits!",
+                })
+            );
+        }
+        district?.upazilas.splice(upzilaIndex, 1);
+        await division.save();
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "District successfully deleted!",
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
 export {
     addDivision,
     editDivision,
@@ -495,4 +546,5 @@ export {
     addSubDistrict,
     updateSubDistrict,
     allSubDistrict,
+    deleteSubDistrict,
 };

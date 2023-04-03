@@ -8,6 +8,7 @@ import {
     allSubDistrict,
     deleteDistrict,
     deleteDivision,
+    deleteSubDistrict,
     editDivision,
     updateDistrict,
     updateSubDistrict,
@@ -36,5 +37,8 @@ router.route("/division/:code/delete").delete(protect, admin, deleteDivision);
 router
     .route("/division/:code/district/:districtCode")
     .delete(protect, admin, deleteDistrict);
+router
+    .route("/division/:code/district/:districtCode/upazila/:upazilaCode")
+    .delete(protect, admin, deleteSubDistrict);
 
 export default router;
