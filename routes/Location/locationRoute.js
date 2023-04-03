@@ -2,6 +2,7 @@ import express from "express";
 import {
     addDistrict,
     addDivision,
+    addSubDistrict,
     allDistricts,
     allDivisions,
     deleteDistrict,
@@ -12,8 +13,9 @@ import {
 import { admin, protect } from "../../middleware/authMiddleware.js";
 const router = express.Router();
 
-router.route("/division/store").post(protect, admin, addDivision);
 router.route("/divisions").get(allDivisions);
+router.route("/division/store").post(protect, admin, addDivision);
+router.route("/upazilas/store").post(protect, admin, addSubDistrict);
 router.route("/division/:code/districts").get(allDistricts);
 router.route("/district/store").post(protect, admin, addDistrict);
 router.route("/division/:code/update").put(protect, admin, editDivision);
