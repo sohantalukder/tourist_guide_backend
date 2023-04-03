@@ -361,7 +361,62 @@ const addSubDistrict = asyncHandler(async (req, res) => {
         })
     );
 });
-
+const updateSubDistrict = asyncHandler(async (req, res) => {
+    const { name, postalCode, geocode } = req.body;
+    const { code, districtCode, upazilaCode } = req.params;
+    try {
+        const division = await Divisions.findOne({ division_code: code });
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+        const district = division.districts.find(
+            (district) => district.district_code == districtCode
+        );
+        if (!district) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Unable to find this district!",
+                })
+            );
+        }
+        const upazilaIndex = district.upazilas.findIndex(
+            (upazila) => upazila.postalCode == upazilaCode
+        );
+        if (upazilaIndex === -1) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Unable to find this upazila!",
+                })
+            );
+        }
+        const upazila = district.upazilas[upazilaIndex];
+        upazila.name = name || upazila.name;
+        upazila.postalCode = postalCode || upazila.postalCode;
+        upazila.geocode = geocode || upazila.geocode;
+        upazila.updatedAt = Date.now();
+        await division.save();
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Successfully updated upazila!",
+            })
+        );
+    } catch (err) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: err.message,
+            })
+        );
+    }
+});
 export {
     addDivision,
     editDivision,
@@ -372,4 +427,5 @@ export {
     allDistricts,
     deleteDistrict,
     addSubDistrict,
+    updateSubDistrict,
 };
