@@ -5,15 +5,6 @@ import { response } from "../../utlis/generateResponse.js";
 const addDivision = asyncHandler(async (req, res) => {
     const { name, code, geocode } = req.body;
     try {
-        const division = await Divisions.findOne({ division_code: code });
-        if (division) {
-            return res.status(409).json(
-                response({
-                    code: 409,
-                    message: "This division has already been added!",
-                })
-            );
-        }
         await Divisions.create({
             name,
             division_code: code,
@@ -28,12 +19,21 @@ const addDivision = asyncHandler(async (req, res) => {
             })
         );
     } catch (err) {
-        return res.status(500).json(
-            response({
-                code: 500,
-                message: err.message,
-            })
-        );
+        if (err.code == "11000") {
+            return res.status(409).json(
+                response({
+                    code: 409,
+                    message: "This division has already been added!",
+                })
+            );
+        } else {
+            return res.status(500).json(
+                response({
+                    code: 500,
+                    message: err.message,
+                })
+            );
+        }
     }
 });
 const editDivision = asyncHandler(async (req, res) => {
@@ -46,9 +46,9 @@ const editDivision = asyncHandler(async (req, res) => {
             { new: true }
         );
         if (division) {
-            return res.status(202).json(
+            return res.status(200).json(
                 response({
-                    code: 202,
+                    code: 200,
                     message: "Successfully division updated!",
                 })
             );
@@ -74,22 +74,21 @@ const deleteDivision = asyncHandler(async (req, res) => {
         const division = await Divisions.findOne({ division_code: id });
         if (division) {
             await division.remove();
-            res.status(200).json(
+            return res.status(200).json(
                 response({
                     code: 200,
                     message: "Successfully division deleted!",
                 })
             );
-        } else {
-            res.status(422).json(
-                response({
-                    code: 422,
-                    message: "Division doesn't exits!",
-                })
-            );
         }
+        return res.status(422).json(
+            response({
+                code: 422,
+                message: "Division doesn't exits!",
+            })
+        );
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -175,4 +174,377 @@ const addDistrict = asyncHandler(async (req, res) => {
         );
     }
 });
-export { addDivision, editDivision, deleteDivision, addDistrict, allDivisions };
+const updateDistrict = asyncHandler(async (req, res) => {
+    const { name, division_code, district_code, geocode } = req.body;
+    const { code, districtCode } = req.params;
+    try {
+        const division = await Divisions.findOne({ division_code: code });
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+        const { districts } = division;
+        const index = districts.findIndex(
+            (district) => district?.district_code == districtCode
+        );
+        if (index === -1) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Unable to find this district!",
+                })
+            );
+        }
+        districts[index] = {
+            name: name || districts[index]?.name,
+            division_code: division_code || districts[index]?.district_code,
+            district_code: district_code || districts[index]?.district_code,
+            geocode: geocode || districts[index]?.geocode,
+            updatedAt: Date.now(),
+        };
+        await division.save();
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Successfully district updated!",
+            })
+        );
+    } catch (err) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: err.message,
+            })
+        );
+    }
+});
+const allDistricts = asyncHandler(async (req, res) => {
+    try {
+        const division = await Divisions.findOne({
+            division_code: req.params.code,
+        });
+        const manipulateDistricts = (districts) => {
+            return districts?.length > 0
+                ? districts
+                      .map((district) => {
+                          return {
+                              name: district.name,
+                              division_code: district.division_code,
+                              district_code: district.district_code,
+                              geocode: district.geocode,
+                          };
+                      })
+                      .sort(function (a, b) {
+                          if (a.district_code < b.district_code) {
+                              return -1;
+                          }
+                          if (a.district_code > b.district_code) {
+                              return 1;
+                          }
+                          return 0;
+                      })
+                : [];
+        };
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Select valid division!",
+                })
+            );
+        }
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: manipulateDistricts(division?.districts),
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
+const deleteDistrict = asyncHandler(async (req, res) => {
+    try {
+        const { code, districtCode } = req.params;
+        const division = await Divisions.findOne({ division_code: code });
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+        const index = division?.districts.findIndex(
+            (district) => district?.district_code == districtCode
+        );
+        if (index === -1) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "District doesn't exits!",
+                })
+            );
+        }
+        division?.districts.splice(index, 1);
+        await division.save();
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "District successfully deleted!",
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
+const addSubDistrict = asyncHandler(async (req, res) => {
+    const { name, division_code, district_code, postalCode, geocode } =
+        req.body;
+    const division = await Divisions.findOne({ division_code }).exec();
+    if (!division) {
+        return res.status(422).json(
+            response({
+                code: 422,
+                message: "Division doesn't exist!",
+            })
+        );
+    }
+    const district = division.districts.find(
+        (district) => district.district_code === district_code
+    );
+    if (!district) {
+        return res.status(422).json(
+            response({
+                code: 422,
+                message: "District doesn't exist!",
+            })
+        );
+    }
+    const upazila = district.upazilas.find(
+        (upazila) => upazila.postalCode === postalCode
+    );
+    if (upazila) {
+        return res.status(409).json(
+            response({
+                code: 409,
+                message: "This upzila is already created!",
+            })
+        );
+    }
+    district.upazilas.push({
+        name,
+        division_code,
+        district_code,
+        postalCode,
+        geocode,
+        createdAt: Date.now(),
+    });
+    await division.save();
+    return res.status(201).json(
+        response({
+            code: 201,
+            message: "Successfully added upazila!",
+        })
+    );
+});
+const updateSubDistrict = asyncHandler(async (req, res) => {
+    const { name, postalCode, geocode } = req.body;
+    const { code, districtCode, upazilaCode } = req.params;
+    try {
+        const division = await Divisions.findOne({ division_code: code });
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+        const district = division.districts.find(
+            (district) => district.district_code == districtCode
+        );
+        if (!district) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Unable to find this district!",
+                })
+            );
+        }
+        const upazilaIndex = district.upazilas.findIndex(
+            (upazila) => upazila.postalCode == upazilaCode
+        );
+        if (upazilaIndex === -1) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Unable to find this upazila!",
+                })
+            );
+        }
+        const upazila = district.upazilas[upazilaIndex];
+        upazila.name = name || upazila.name;
+        upazila.postalCode = postalCode || upazila.postalCode;
+        upazila.geocode = geocode || upazila.geocode;
+        upazila.updatedAt = Date.now();
+        await division.save();
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Successfully updated upazila!",
+            })
+        );
+    } catch (err) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: err.message,
+            })
+        );
+    }
+});
+const allSubDistrict = asyncHandler(async (req, res) => {
+    try {
+        const { code, districtCode } = req.params;
+        const division = await Divisions.findOne({
+            division_code: code,
+        });
+        const manipulateUpazilas = (upazilas) => {
+            return upazilas?.length > 0
+                ? upazilas
+                      .map((upazila) => {
+                          return {
+                              name: upazila.name,
+                              division_code: upazila.division_code,
+                              district_code: upazila.district_code,
+                              postalCode: upazila.postalCode,
+                              geocode: upazila.geocode,
+                          };
+                      })
+                      .sort(function (a, b) {
+                          if (a.postalCode < b.postalCode) {
+                              return -1;
+                          }
+                          if (a.postalCode > b.postalCode) {
+                              return 1;
+                          }
+                          return 0;
+                      })
+                : [];
+        };
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Select valid division!",
+                })
+            );
+        }
+        const district = division.districts.find(
+            (district) => district.district_code == districtCode
+        );
+        if (!district) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Unable to find this district!",
+                })
+            );
+        }
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: manipulateUpazilas(district?.upazilas),
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
+const deleteSubDistrict = asyncHandler(async (req, res) => {
+    try {
+        const { code, districtCode, upazilaCode } = req.params;
+        const division = await Divisions.findOne({ division_code: code });
+        if (!division) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Division doesn't exits!",
+                })
+            );
+        }
+        const district = division?.districts.find(
+            (district) => district?.district_code == districtCode
+        );
+        if (!district) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "District doesn't exits!",
+                })
+            );
+        }
+        const upzilaIndex = district?.upazilas.findIndex(
+            (upazila) => upazila?.postalCode == upazilaCode
+        );
+        if (upzilaIndex === -1) {
+            return res.status(422).json(
+                response({
+                    code: 422,
+                    message: "Upzila doesn't exits!",
+                })
+            );
+        }
+        district?.upazilas.splice(upzilaIndex, 1);
+        await division.save();
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "District successfully deleted!",
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+});
+export {
+    addDivision,
+    editDivision,
+    deleteDivision,
+    addDistrict,
+    allDivisions,
+    updateDistrict,
+    allDistricts,
+    deleteDistrict,
+    addSubDistrict,
+    updateSubDistrict,
+    allSubDistrict,
+    deleteSubDistrict,
+};
