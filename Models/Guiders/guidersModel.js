@@ -1,15 +1,17 @@
 import mongoose from "mongoose";
 
 const guiderSchema = new mongoose.Schema({
-    guidersID: { type: String, required: true },
     name: { type: String, required: true },
     description: { type: String, default: null },
     images: { type: [String], default: null },
     profileImage: { type: String, default: null },
     gender: { type: String, default: "Male" },
-    guideIn: { type: String, default: null },
+    locateArea: { type: String, default: null },
+    location: { type: String, default: null },
     languages: { type: [String], default: ["Bangla", "English"] },
-    price: { type: Number, default: null },
+    contactNumber: { type: String, default: null },
+    email: { type: String, default: null, unique: true },
+    price: { type: Number, default: null, unique: true },
     pricePer: { type: String, default: "Hour" },
     currencyAccept: { type: [String], default: ["BDT", "USA"] },
     rating: { type: Number, default: 0 },
@@ -17,7 +19,7 @@ const guiderSchema = new mongoose.Schema({
         {
             userId: { type: String },
             userName: { type: String },
-            userImage: { type: String, default: Null },
+            userImage: { type: String, default: null },
             comment: {
                 type: String,
                 maxLength: [
@@ -28,6 +30,7 @@ const guiderSchema = new mongoose.Schema({
             createAt: { type: Date, default: Date.now },
         },
     ],
+    request: { type: String, default: "Available" },
     totalTour: { type: Number, default: 0 },
     available: { type: Boolean, default: true },
     createdAt: { type: Date },
