@@ -2,6 +2,8 @@ import asyncHandler from "express-async-handler";
 import { response } from "../../utlis/generateResponse.js";
 import Guider from "../../Models/Guiders/guidersModel.js";
 import User from "../../Models/User/userModel.js";
+import getDataURI from "../../utlis/dataUri.js";
+import cloudinary from "cloudinary";
 
 const addGuider = asyncHandler(async (req, res) => {
     const {
@@ -18,9 +20,18 @@ const addGuider = asyncHandler(async (req, res) => {
         currencyAccept,
     } = req.body;
     const files = req.files;
-    console.log(files);
     try {
         const user = await User.findOne({ email });
+        const profileImage = files.find(
+            (image) => image.fieldname === "profileImage"
+        );
+        let cloudImage;
+        if (profileImage) {
+            const imageURI = await getDataURI(profileImage);
+            cloudImage = await cloudinary.v2.uploader.upload(imageURI.content, {
+                public_id: profileImage?.originalname?.split(".")[0],
+            });
+        }
         if (user) {
             return res.status(409).json(
                 response({
@@ -33,6 +44,7 @@ const addGuider = asyncHandler(async (req, res) => {
             name,
             description,
             gender,
+            profileImage: cloudImage?.secure_url,
             locateArea,
             location,
             languages,
