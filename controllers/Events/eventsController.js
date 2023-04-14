@@ -40,14 +40,14 @@ const createEvent = asyncHandler(async (req, res) => {
             image: cloudImage.secure_url,
             creatorId,
         });
-        res.status(201).json(
+        return res.status(201).json(
             response({
                 code: 201,
                 message: "Successfully created event",
             })
         );
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -97,14 +97,14 @@ const updateEventInfo = asyncHandler(async (req, res) => {
                 event.startDate = startDate || event.startDate;
                 event.endDate = endDate || event.endDate;
                 await event.save();
-                res.status(200).json(
+                return res.status(200).json(
                     response({
                         code: 200,
                         message: "Successfully updated event information!",
                     })
                 );
             } else {
-                res.status(401).json(
+                return res.status(401).json(
                     response({
                         code: 401,
                         message: "You are not able update events details.",
@@ -112,7 +112,7 @@ const updateEventInfo = asyncHandler(async (req, res) => {
                 );
             }
         } else {
-            res.status(404).json(
+            return res.status(404).json(
                 response({
                     code: 404,
                     message: "Event Not Found!",
@@ -120,7 +120,7 @@ const updateEventInfo = asyncHandler(async (req, res) => {
             );
         }
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -132,7 +132,7 @@ const eventDetails = asyncHandler(async (req, res) => {
     const event = await Events.findById(req.params.id);
     const creator = await User.findOne({ _id: event.creatorId });
     if (event) {
-        res.status(200).json(
+        return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
@@ -157,24 +157,27 @@ const eventDetails = asyncHandler(async (req, res) => {
             })
         );
     } else {
-        res.status(404).json(
-            response({ code: 404, message: "Event not found!" })
-        );
+        return res
+            .status(404)
+            .json(response({ code: 404, message: "Event not found!" }));
     }
 });
 const deleteEvent = asyncHandler(async (req, res) => {
     const event = await Events.findById(req.params.id);
     if (event) {
         if (event.creatorId == req.user._id) {
-            await event.remove();
+            event.remove();
             if (event?.image) {
                 cloudinary.v2.uploader.destroy(getImageName(event?.image));
             }
-            res.status(200).json(
-                response({ code: 200, message: "Event deleted Successfully" })
+            return res.status(200).json(
+                response({
+                    code: 200,
+                    message: "Event deleted Successfully",
+                })
             );
         } else {
-            res.status(404).json(
+            return res.status(404).json(
                 response({
                     code: 404,
                     message: "You are not able delete this event",
@@ -182,9 +185,9 @@ const deleteEvent = asyncHandler(async (req, res) => {
             );
         }
     } else {
-        res.status(404).json(
-            response({ code: 404, message: "Event not found!" })
-        );
+        return res
+            .status(404)
+            .json(response({ code: 404, message: "Event not found!" }));
     }
 });
 export { createEvent, updateEventInfo, eventDetails, deleteEvent };

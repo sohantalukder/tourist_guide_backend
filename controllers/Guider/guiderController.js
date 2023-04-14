@@ -4,6 +4,7 @@ import Guider from "../../Models/Guiders/guidersModel.js";
 import User from "../../Models/User/userModel.js";
 import getDataURI from "../../utlis/dataUri.js";
 import cloudinary from "cloudinary";
+import { getImageName } from "../../utlis/getImageName.js";
 
 const addGuider = asyncHandler(async (req, res) => {
     const {
@@ -97,4 +98,53 @@ const addGuider = asyncHandler(async (req, res) => {
         }
     }
 });
-export { addGuider };
+const deleteGuider = async (req, res) => {
+    const guider = await Guider.findById(req.params.id);
+
+    if (!guider) {
+        return res.status(422).json(
+            response({
+                code: 422,
+                message: "Guider doesn't exist!",
+            })
+        );
+    }
+    if (guider.email !== req.user.email) {
+        return res.status(422).json(
+            response({
+                code: 422,
+                message: "You are not eligible to delete this guider!",
+            })
+        );
+    }
+
+    try {
+        await guider.remove();
+        const imageName = getImageName(guider?.profileImage);
+        if (imageName) {
+            cloudinary.v2.uploader.destroy(imageName);
+        }
+
+        for (let image of guider.images || []) {
+            const imageName = getImageName(image);
+            if (imageName) {
+                cloudinary.v2.uploader.destroy(imageName);
+            }
+        }
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Successfully deleted guider!",
+            })
+        );
+    } catch (error) {
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
+    }
+};
+
+export { addGuider, deleteGuider };
