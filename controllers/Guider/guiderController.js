@@ -22,16 +22,31 @@ const addGuider = asyncHandler(async (req, res) => {
     const files = req.files;
     try {
         const user = await User.findOne({ email });
-        const profileImage = files.find(
-            (image) => image.fieldname === "profileImage"
+        const image = files.find((image) => image.fieldname === "profileImage");
+        const images = files.filter(
+            (image) => image.fieldname !== "profileImage"
         );
-        let cloudImage;
-        if (profileImage) {
-            const imageURI = await getDataURI(profileImage);
-            cloudImage = await cloudinary.v2.uploader.upload(imageURI.content, {
-                public_id: profileImage?.originalname?.split(".")[0],
+        let profile;
+        let allImages = [];
+        if (image) {
+            const imageURI = await getDataURI(image);
+            profile = await cloudinary.v2.uploader.upload(imageURI.content, {
+                public_id: image?.originalname?.split(".")[0],
             });
         }
+        if (images?.length > 0) {
+            for (let image of images) {
+                const imageURI = await getDataURI(image);
+                const cloudImage = await cloudinary.v2.uploader.upload(
+                    imageURI.content,
+                    {
+                        public_id: image?.originalname?.split(".")[0],
+                    }
+                );
+                allImages.push(cloudImage.secure_url);
+            }
+        }
+        console.log(allImages);
         if (user) {
             return res.status(409).json(
                 response({
@@ -44,7 +59,8 @@ const addGuider = asyncHandler(async (req, res) => {
             name,
             description,
             gender,
-            profileImage: cloudImage?.secure_url,
+            profileImage: profile?.secure_url,
+            images: allImages,
             locateArea,
             location,
             languages,
@@ -63,6 +79,7 @@ const addGuider = asyncHandler(async (req, res) => {
             })
         );
     } catch (err) {
+        console.log(err.message);
         if (err.code == "11000") {
             return res.status(409).json(
                 response({
