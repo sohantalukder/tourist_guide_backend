@@ -98,7 +98,7 @@ const addGuider = asyncHandler(async (req, res) => {
         }
     }
 });
-const deleteGuider = async (req, res) => {
+const deleteGuider = asyncHandler(async (req, res) => {
     const guider = await Guider.findById(req.params.id);
 
     if (!guider) {
@@ -145,6 +145,6 @@ const deleteGuider = async (req, res) => {
             })
         );
     }
-};
-
+});
+const updateGuiderInfo = () => {};
 export { addGuider, deleteGuider };

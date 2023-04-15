@@ -8,6 +8,6 @@ import {
 const router = express.Router();
 
 router.route("/create").post(protect, verifiedEmail, upload, addGuider);
-router.route("/delete/:id").post(protect, verifiedEmail, deleteGuider);
+router.route("/delete/:id").delete(protect, verifiedEmail, deleteGuider);
 
 export default router;
