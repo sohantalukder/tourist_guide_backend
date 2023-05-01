@@ -47,7 +47,6 @@ const addGuider = asyncHandler(async (req, res) => {
                 allImages.push(cloudImage.secure_url);
             }
         }
-        console.log(allImages);
         if (user) {
             return res.status(409).json(
                 response({
@@ -80,7 +79,6 @@ const addGuider = asyncHandler(async (req, res) => {
             })
         );
     } catch (err) {
-        console.log(err.message);
         if (err.code == "11000") {
             return res.status(409).json(
                 response({
@@ -146,5 +144,5 @@ const deleteGuider = asyncHandler(async (req, res) => {
         );
     }
 });
-const updateGuiderInfo = () => {};
+const updateGuiderInfo = asyncHandler(async (req, res) => {});
 export { addGuider, deleteGuider };
