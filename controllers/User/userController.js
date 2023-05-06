@@ -19,7 +19,7 @@ const authUser = asyncHandler(async (req, res) => {
         if (!user.emailVerify) {
             sendOTPVerificationEmail({ user, res });
         } else {
-            res.status(200).json(
+            return res.status(200).json(
                 response({
                     code: 200,
                     message: "ok",
@@ -42,9 +42,11 @@ const authUser = asyncHandler(async (req, res) => {
             );
         }
     } else {
-        res.status(401).json(
-            response({ code: 401, message: "Invalid email or password" })
-        );
+        return res
+            .status(401)
+            .json(
+                response({ code: 401, message: "Invalid email or password" })
+            );
     }
 });
 
@@ -52,13 +54,16 @@ const duplicateEmailCheck = asyncHandler(async (req, res) => {
     const { email } = req.body;
     const userExists = await User.findOne({ email });
     if (userExists) {
-        res.status(401).json(
-            response({ code: 401, message: "User already is already taken" })
+        return res.status(401).json(
+            response({
+                code: 401,
+                message: "User already is already taken",
+            })
         );
     } else {
-        res.status(200).json(
-            response({ code: 200, message: "This email available" })
-        );
+        return res
+            .status(200)
+            .json(response({ code: 200, message: "This email available" }));
     }
 });
 
@@ -109,16 +114,18 @@ const registerUser = asyncHandler(async (req, res) => {
             password,
         });
         if (!user) {
-            res.status(400).json(
-                response({ code: 400, message: "Invalid user data" })
-            );
+            return res
+                .status(400)
+                .json(response({ code: 400, message: "Invalid user data" }));
         }
         sendOTPVerificationEmail({
             user,
             res,
         });
     } catch (error) {
-        res.status(500).json(response({ code: 500, message: error.message }));
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 
@@ -141,7 +148,7 @@ const sendOTPVerificationEmail = async ({ user, res }) => {
         });
         await newOTPVerification.save();
         await transporter().sendMail(mailOptions);
-        res.status(202).json(
+        return res.status(202).json(
             response({
                 code: 202,
                 message: "Verification OTP sent to your email!",
@@ -154,7 +161,7 @@ const sendOTPVerificationEmail = async ({ user, res }) => {
             })
         );
     } catch (error) {
-        res.status(401).json(
+        return res.status(401).json(
             response({
                 code: 401,
                 message: error.message,
@@ -167,7 +174,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
     try {
         const { otp } = req.body;
         if (!req.user._id || !otp) {
-            res.status(401).json(
+            return res.status(401).json(
                 response({
                     code: 401,
                     message: "Empty otp details are not allowed",
@@ -181,7 +188,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
                 !userOtpVerificationRecords ||
                 userOtpVerificationRecords <= 0
             ) {
-                res.status(401).json(
+                return res.status(401).json(
                     response({
                         code: 401,
                         message:
@@ -195,7 +202,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
                     await UserOptVerification.deleteMany({
                         userId: req.user._id,
                     });
-                    res.status(401).json(
+                    return res.status(401).json(
                         response({
                             code: 401,
                             message: "Code has expired. Please request again!",
@@ -204,7 +211,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
                 } else {
                     const validOtp = otp === recordOtp;
                     if (!validOtp) {
-                        res.status(401).json(
+                        return res.status(401).json(
                             response({
                                 code: 401,
                                 message:
@@ -217,7 +224,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
                         });
                         getUser.emailVerify = true;
                         const updatedUser = await getUser.save();
-                        res.status(201).json(
+                        return res.status(201).json(
                             response({
                                 code: 201,
                                 message: "User email verified successfully",
@@ -243,7 +250,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
             }
         }
     } catch (error) {
-        res.status(401).json(
+        return res.status(401).json(
             response({
                 code: 401,
                 message: error.message,
@@ -255,7 +262,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
 const getUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
     if (user) {
-        res.status(200).json(
+        return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
@@ -275,9 +282,9 @@ const getUser = asyncHandler(async (req, res) => {
             })
         );
     } else {
-        res.status(404).json(
-            response({ code: 404, message: "User not found!" })
-        );
+        return res
+            .status(404)
+            .json(response({ code: 404, message: "User not found!" }));
     }
 });
 const resendVerifyOTP = asyncHandler(async (req, res) => {
@@ -289,7 +296,7 @@ const resendVerifyOTP = asyncHandler(async (req, res) => {
             });
             sendOTPVerificationEmail({ user, res });
         } else {
-            res.status(401).json(
+            return res.status(401).json(
                 response({
                     code: 401,
                     message:
@@ -298,7 +305,7 @@ const resendVerifyOTP = asyncHandler(async (req, res) => {
             );
         }
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -319,14 +326,14 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             user.location = location || user.location;
             user.contactNumber = contactNumber || user.contactNumber;
             await user.save();
-            res.status(200).json(
+            return res.status(200).json(
                 response({
                     code: 200,
                     message: "Successfully updated profile information!",
                 })
             );
         } else {
-            res.status(401).json(
+            return res.status(401).json(
                 response({
                     code: 401,
                     message:
@@ -335,9 +342,9 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             );
         }
     } else {
-        res.status(404).json(
-            response({ code: 404, message: "User not found!" })
-        );
+        return res
+            .status(404)
+            .json(response({ code: 404, message: "User not found!" }));
     }
 });
 const uploadProfileImage = asyncHandler(async (req, res) => {
@@ -355,19 +362,21 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
             }
             user.image = cloudImage.secure_url || user.image;
             await user.save();
-            res.status(200).json(
+            return res.status(200).json(
                 response({
                     code: 200,
                     message: "Successfully updated profile picture!",
                 })
             );
         } else {
-            res.status(404).json(
-                response({ code: 404, message: "User not found!" })
-            );
+            return res
+                .status(404)
+                .json(response({ code: 404, message: "User not found!" }));
         }
     } catch (error) {
-        res.status(500).json(response({ code: 500, message: error.message }));
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 const changePassword = asyncHandler(async (req, res) => {
@@ -378,14 +387,14 @@ const changePassword = asyncHandler(async (req, res) => {
             if (await user.comparePassword(oldPassword)) {
                 user.password = newPassword;
                 await user.save();
-                res.status(200).json(
+                return res.status(200).json(
                     response({
                         code: 200,
                         message: "Successfully changed your password",
                     })
                 );
             } else {
-                res.status(401).json(
+                return res.status(401).json(
                     response({
                         code: 401,
                         message: "Your old password doesn't match!",
@@ -393,12 +402,12 @@ const changePassword = asyncHandler(async (req, res) => {
                 );
             }
         } else {
-            res.status(404).json(
-                response({ code: 404, message: "User not found!" })
-            );
+            return res
+                .status(404)
+                .json(response({ code: 404, message: "User not found!" }));
         }
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -427,14 +436,14 @@ const sendOTPResetPassword = async ({ user, res }) => {
         });
         await newRestOTP.save();
         await transporter.sendMail(mailOptions);
-        res.status(202).json(
+        return res.status(202).json(
             response({
                 code: 202,
                 message: "Reset OTP sent to your email!",
             })
         );
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -451,12 +460,14 @@ const resetPassword = asyncHandler(async (req, res) => {
                 res,
             });
         } else {
-            res.status(404).json(
-                response({ code: 404, message: "User not found!" })
-            );
+            return res
+                .status(404)
+                .json(response({ code: 404, message: "User not found!" }));
         }
     } catch (error) {
-        res.status(500).json(response({ code: 500, message: error.message }));
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 
@@ -464,7 +475,7 @@ const verifyResetPassword = asyncHandler(async (req, res) => {
     try {
         const { otp, email } = req.body;
         if (!email || !otp) {
-            res.status(401).json(
+            return res.status(401).json(
                 response({
                     code: 401,
                     message: "Empty otp details are not allowed",
@@ -475,7 +486,7 @@ const verifyResetPassword = asyncHandler(async (req, res) => {
                 email: email,
             });
             if (!otpForResetPassword || otpForResetPassword <= 0) {
-                res.status(401).json(
+                return res.status(401).json(
                     response({
                         code: 401,
                         message:
@@ -488,7 +499,7 @@ const verifyResetPassword = asyncHandler(async (req, res) => {
                     await resetOtp.deleteMany({
                         email: email,
                     });
-                    res.status(401).json(
+                    return res.status(401).json(
                         response({
                             code: 401,
                             message: "Code has expired. Please request again!",
@@ -497,7 +508,7 @@ const verifyResetPassword = asyncHandler(async (req, res) => {
                 } else {
                     const validOtp = otp === recordOtp;
                     if (!validOtp) {
-                        res.status(401).json(
+                        return res.status(401).json(
                             response({
                                 code: 401,
                                 message:
@@ -508,7 +519,7 @@ const verifyResetPassword = asyncHandler(async (req, res) => {
                         (otpForResetPassword[0].expiredToken =
                             Date.now() + 3000000),
                             await otpForResetPassword[0].save();
-                        res.status(200).json(
+                        return res.status(200).json(
                             response({
                                 code: 200,
                                 message: "User email verified successfully",
@@ -522,7 +533,7 @@ const verifyResetPassword = asyncHandler(async (req, res) => {
             }
         }
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -534,13 +545,15 @@ const storeResetPassword = asyncHandler(async (req, res) => {
     try {
         const { password } = req.body;
         if (!password) {
-            res.json(400).json(
-                response({ code: 400, message: "Please enter password!" })
-            );
+            return res
+                .json(400)
+                .json(
+                    response({ code: 400, message: "Please enter password!" })
+                );
         } else {
             const resetOTP = await resetOtp.find({ email: req.user.email });
             if (!resetOTP || resetOTP <= 0) {
-                res.status(401).json(
+                return res.status(401).json(
                     response({
                         code: 401,
                         message:
@@ -553,7 +566,7 @@ const storeResetPassword = asyncHandler(async (req, res) => {
                     await resetOtp.deleteMany({
                         email: req.user.email,
                     });
-                    res.status(401).json(
+                    return res.status(401).json(
                         response({
                             code: 401,
                             message: "Code has expired. Please request again!",
@@ -565,7 +578,7 @@ const storeResetPassword = asyncHandler(async (req, res) => {
                     });
                     getUser.password = password;
                     await getUser.save();
-                    res.status(200).json(
+                    return res.status(200).json(
                         response({
                             code: 200,
                             message: "Successfully reset password!",
@@ -575,7 +588,9 @@ const storeResetPassword = asyncHandler(async (req, res) => {
             }
         }
     } catch (error) {
-        res.json(500).json(response({ code: 500, message: error.message }));
+        return res
+            .json(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 export {

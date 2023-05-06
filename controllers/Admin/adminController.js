@@ -8,7 +8,7 @@ const adminLogin = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email }).select("+password");
     if (user && (await user.comparePassword(password))) {
         if (user.role === "admin") {
-            res.status(200).json(
+            return res.status(200).json(
                 response({
                     code: 200,
                     message: "Ok",
@@ -32,7 +32,7 @@ const adminLogin = asyncHandler(async (req, res) => {
                 })
             );
         } else {
-            res.status(401).json(
+            return res.status(401).json(
                 response({
                     code: 401,
                     message: "You do not have permission to make admin",
@@ -40,7 +40,7 @@ const adminLogin = asyncHandler(async (req, res) => {
             );
         }
     } else {
-        res.status(401).json(
+        return res.status(401).json(
             response({
                 code: 401,
                 message: "Invalid email or password",
@@ -53,7 +53,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
     const sort = { _id: -1 };
     const users = await User.find({}).sort(sort);
     if (users?.length > 0) {
-        res.status(200).json(
+        return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
@@ -63,20 +63,22 @@ const getAllUsers = asyncHandler(async (req, res) => {
             })
         );
     } else {
-        res.status(404).json(response(404, "Users not found!", []));
+        return res.status(404).json(response(404, "Users not found!", []));
     }
 });
 const deleteUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
     if (user) {
         await user.remove();
-        res.status(200).json(
-            response({ code: 200, message: "User Removed Successfully" })
-        );
+        return res
+            .status(200)
+            .json(
+                response({ code: 200, message: "User Removed Successfully" })
+            );
     } else {
-        res.status(404).json(
-            response({ code: 404, message: "User not found!" })
-        );
+        return res
+            .status(404)
+            .json(response({ code: 404, message: "User not found!" }));
     }
 });
 export { getAllUsers, adminLogin, deleteUser };
