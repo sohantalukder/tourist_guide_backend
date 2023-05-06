@@ -266,5 +266,40 @@ const updateGuiderInfo = asyncHandler(async (req, res) => {
         );
     }
 });
-
-export { addGuider, deleteGuider, updateGuiderInfo };
+const getGuiderDetails = asyncHandler(async (req, res) => {
+    const guider = await Guiders.findById(req.params.id);
+    try {
+        if (guider) {
+            return res.status(200).json(
+                response({
+                    code: 200,
+                    message: "Ok",
+                    records: {
+                        id: guider._id,
+                        name: guider.name,
+                        contactNumber: guider.contactNumber,
+                        email: guider.email,
+                        gender: guider.gender,
+                        profileImage: guider.profileImage,
+                        images: guider.images,
+                        locateArea: guider.locateArea,
+                        location: guider.location,
+                        languages: guider.languages,
+                        price: guider.price,
+                        pricePerHour: guider.pricePer,
+                        currencyAccept: guider.currencyAccept,
+                    },
+                })
+            );
+        } else {
+            return res
+                .status(404)
+                .json(response({ code: 404, message: "Guider not found!" }));
+        }
+    } catch (err) {
+        return res
+            .status(500)
+            .json(response({ code: 500, message: err.message }));
+    }
+});
+export { addGuider, deleteGuider, updateGuiderInfo, getGuiderDetails };
