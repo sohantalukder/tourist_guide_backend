@@ -32,14 +32,14 @@ const createBlog = asyncHandler(async (req, res) => {
             images: imagesURL,
             createAt: Date.now(),
         });
-        res.status(201).json(
+        return res.status(201).json(
             response({
                 code: 201,
                 message: "Successfully created blog!",
             })
         );
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -87,7 +87,7 @@ const allBlogsList = asyncHandler(async (req, res) => {
                   })
                 : [];
         };
-        res.status(200).json(
+        return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
@@ -99,7 +99,9 @@ const allBlogsList = asyncHandler(async (req, res) => {
             })
         );
     } catch (error) {
-        res.status(500).json(response({ code: 500, message: error.message }));
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 const updateBlog = asyncHandler(async (req, res) => {
@@ -167,14 +169,14 @@ const updateBlog = asyncHandler(async (req, res) => {
                 blog.images = blog.images;
                 blog.updatedAt = Date.now();
                 await blog.save();
-                res.status(200).json(
+                return res.status(200).json(
                     response({
                         code: 200,
                         message: "Successfully updated blog details!",
                     })
                 );
             } else {
-                res.status(401).json(
+                return res.status(401).json(
                     response({
                         code: 401,
                         message: "You are not able to update this blog!",
@@ -182,12 +184,14 @@ const updateBlog = asyncHandler(async (req, res) => {
                 );
             }
         } else {
-            res.status(404).json(
-                response({ code: 404, message: "Blog not found!" })
-            );
+            return res
+                .status(404)
+                .json(response({ code: 404, message: "Blog not found!" }));
         }
     } catch (error) {
-        res.status(500).json(response({ code: 500, message: error.message }));
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 const userBlogsList = asyncHandler(async (req, res) => {
@@ -228,7 +232,7 @@ const userBlogsList = asyncHandler(async (req, res) => {
                   })
                 : [];
         };
-        res.status(200).json(
+        return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
@@ -240,7 +244,9 @@ const userBlogsList = asyncHandler(async (req, res) => {
             })
         );
     } catch (error) {
-        res.status(500).json(response({ code: 500, message: error.message }));
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 const deleteBlog = asyncHandler(async (req, res) => {
@@ -253,14 +259,14 @@ const deleteBlog = asyncHandler(async (req, res) => {
                     await cloudinary.v2.uploader.destroy(getImageName(image));
                 }
                 await blog.remove();
-                res.status(200).json(
+                return res.status(200).json(
                     response({
                         code: 200,
                         message: "Successfully delete this blog!",
                     })
                 );
             } else {
-                res.status(401).json(
+                return res.status(401).json(
                     response({
                         code: 401,
                         message: "You are not able to delete this blog!",
@@ -268,12 +274,14 @@ const deleteBlog = asyncHandler(async (req, res) => {
                 );
             }
         } else {
-            res.status(404).json(
-                response({ code: 404, message: "Blog not found!" })
-            );
+            return res
+                .status(404)
+                .json(response({ code: 404, message: "Blog not found!" }));
         }
     } catch (error) {
-        res.status(500).json(response({ code: 500, message: error.message }));
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 const getBlogById = asyncHandler(async (req, res) => {
@@ -294,7 +302,7 @@ const getBlogById = asyncHandler(async (req, res) => {
                       })
                     : [];
             };
-            res.status(200).json(
+            return res.status(200).json(
                 response({
                     code: 200,
                     message: "Ok",
@@ -316,12 +324,12 @@ const getBlogById = asyncHandler(async (req, res) => {
                 })
             );
         } else {
-            res.status(404).json(
-                response({ code: 404, message: "Blog not found!" })
-            );
+            return res
+                .status(404)
+                .json(response({ code: 404, message: "Blog not found!" }));
         }
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,
@@ -341,16 +349,16 @@ const createBlogComment = asyncHandler(async (req, res) => {
             };
             blog.comments.push(newComment);
             await blog.save();
-            res.status(201).json(
-                response({ code: 201, message: "Comment Added!" })
-            );
+            return res
+                .status(201)
+                .json(response({ code: 201, message: "Comment Added!" }));
         } else {
-            res.status(404).json(
-                response({ code: 404, message: "Blog not found!" })
-            );
+            return res
+                .status(404)
+                .json(response({ code: 404, message: "Blog not found!" }));
         }
     } catch (error) {
-        res.status(500).json(
+        return res.status(500).json(
             response({
                 code: 500,
                 message: error.message,

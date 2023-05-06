@@ -84,21 +84,23 @@ const updatePreference = asyncHandler(async (req, res) => {
         preference.whiteLogo =
             whiteLogoResult?.secure_url || preference.whiteLogo;
         await preference.save();
-        res.status(200).json(
+        return res.status(200).json(
             response({
                 code: 200,
                 message: "Successfully updated preference!",
             })
         );
     } catch (error) {
-        res.status(500).json(response({ code: 500, message: error.message }));
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 const getPreference = asyncHandler(async (req, res) => {
     try {
         const preference = await Preferences.findOne({});
         if (preference) {
-            res.status(200).json(
+            return res.status(200).json(
                 response({
                     code: 200,
                     message: "Ok",
@@ -129,12 +131,16 @@ const getPreference = asyncHandler(async (req, res) => {
                 })
             );
         } else {
-            res.status(500).json(
-                response({ code: 500, message: "Internal Server Error!" })
-            );
+            return res
+                .status(500)
+                .json(
+                    response({ code: 500, message: "Internal Server Error!" })
+                );
         }
     } catch (error) {
-        res.status(500).json(response({ code: 500, message: error.message }));
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 

@@ -17,16 +17,18 @@ const protect = asyncHandler(async (req, res, next) => {
                 next();
             }
         } catch (error) {
-            console.error(error);
-            res.status(401).json(
-                response({ code: 401, message: "Not authorized, token failed" })
+            return res.status(401).json(
+                response({
+                    code: 401,
+                    message: "Not authorized, token failed",
+                })
             );
         }
     }
     if (!token) {
-        res.status(401).json(
-            response({ code: 401, message: "Not authorized, No token" })
-        );
+        return res
+            .status(401)
+            .json(response({ code: 401, message: "Not authorized, No token" }));
     }
 });
 const protectResetPassword = asyncHandler(async (req, res, next) => {
@@ -46,31 +48,38 @@ const protectResetPassword = asyncHandler(async (req, res, next) => {
             }
         } catch (error) {
             console.error(error);
-            res.status(401).json(
-                response({ code: 401, message: "Not authorized, token failed" })
-            );
+            return res
+                .status(401)
+                .json(
+                    response({
+                        code: 401,
+                        message: "Not authorized, token failed",
+                    })
+                );
         }
     }
     if (!token) {
-        res.status(401).json(
-            response({ code: 401, message: "Not authorized, No token" })
-        );
+        return res
+            .status(401)
+            .json(response({ code: 401, message: "Not authorized, No token" }));
     }
 });
 const admin = (req, res, next) => {
     if (req?.user && req.user?.role === "admin") {
         next();
     } else {
-        res.status(401).json(
-            response({ code: 401, message: "Not authorized as an admin" })
-        );
+        return res
+            .status(401)
+            .json(
+                response({ code: 401, message: "Not authorized as an admin" })
+            );
     }
 };
 const verifiedEmail = (req, res, next) => {
     if (req?.user && req.user?.emailVerify === true) {
         next();
     } else {
-        res.status(401).json(
+        return res.status(401).json(
             response({
                 code: 401,
                 message:

@@ -1,37 +1,42 @@
 import mongoose from "mongoose";
 
-const guidersSchema = mongoose.Schema({
-    guidersID: {
-        type: String,
-        required: true,
-    },
+const guiderSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    description: {
-        type: String,
-        required: true,
-        default: null,
-    },
-    images: { type: Array, default: null },
+    description: { type: String, default: null },
+    images: { type: [String], default: null },
     profileImage: { type: String, default: null },
     gender: { type: String, default: "Male" },
-    guideIn: { type: String, default: null },
-    languages: { type: Array, default: ["Bangla", "English"] },
-    price: { type: Number, default: null },
+    locateArea: { type: String, default: null },
+    location: { type: String, default: null },
+    languages: { type: [String], default: ["Bangla", "English"] },
+    contactNumber: { type: String, default: null, unique: true },
+    email: { type: String, default: null, unique: true },
+    price: { type: Number, default: 0, required: true },
     pricePer: { type: String, default: "Hour" },
-    currencyAccept: { type: Array, default: ["BDT", "USA"] },
+    currencyAccept: { type: [String], default: ["BDT", "USA"] },
     rating: { type: Number, default: 0 },
-    feedBack: ["ads"],
-    tourCalender: ["ads"],
-    available: { type: Boolean, default: True },
-    createdAt: {
-        type: Date,
-        required: true,
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now,
-    },
+    feedBack: [
+        {
+            userId: { type: String },
+            userName: { type: String },
+            userImage: { type: String, default: null },
+            comment: {
+                type: String,
+                maxLength: [
+                    255,
+                    "Comment description cannot exceed 255 characters",
+                ],
+            },
+            createAt: { type: Date, default: Date.now },
+        },
+    ],
+    request: { type: String, default: "Available" },
+    totalTour: { type: Number, default: 0 },
+    available: { type: Boolean, default: true },
+    createdAt: { type: Date },
+    updatedAt: { type: Date },
 });
-const Guiders = mongoose.model("guiders", guidersSchema);
 
-export default Guiders;
+const Guider = mongoose.model("guiders", guiderSchema);
+
+export default Guider;

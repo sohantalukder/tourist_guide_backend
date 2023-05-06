@@ -30,14 +30,16 @@ const uploadField = multerConfig.any();
 const upload = (req, res, next) => {
     uploadField(req, res, function (err) {
         if (err instanceof multer.MulterError) {
-            res.status(500).json(
+            return res.status(500).json(
                 response({
                     code: 500,
                     message: "Image size must be less than 2 MB",
                 })
             );
         } else if (err) {
-            res.status(500).json(response({ code: 500, message: err.message }));
+            return res
+                .status(500)
+                .json(response({ code: 500, message: err.message }));
         }
         next();
     });
