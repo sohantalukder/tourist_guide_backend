@@ -302,4 +302,68 @@ const getGuiderDetails = asyncHandler(async (req, res) => {
             .json(response({ code: 500, message: err.message }));
     }
 });
-export { addGuider, deleteGuider, updateGuiderInfo, getGuiderDetails };
+const allGuiders = asyncHandler(async (req, res) => {
+    try {
+        const pageSize = Number(req.query.pageSize) || 10;
+        const page = Number(req.query.page) || 1;
+        const sortbyID = { _id: -1 };
+        const sortByRating = { react: -1 };
+        const keyword = req.query.keyword
+            ? {
+                  name: {
+                      $regex: req.query.keyword,
+                      $options: "i",
+                  },
+              }
+            : {};
+
+        const count = await Guiders.countDocuments({ ...keyword });
+        const guiders = await Guiders.find({ ...keyword })
+            .sort(sortByRating)
+            .sort(sortbyID)
+            .skip(pageSize * (page - 1));
+        const manipulateGuiders = (guiders) => {
+            return guiders?.length > 0
+                ? guiders.map((guider) => {
+                      return {
+                          id: guider._id,
+                          name: guider.name,
+                          contactNumber: guider.contactNumber,
+                          email: guider.email,
+                          gender: guider.gender,
+                          profileImage: guider.profileImage,
+                          images: guider.images,
+                          locateArea: guider.locateArea,
+                          location: guider.location,
+                          languages: guider.languages,
+                          price: guider.price,
+                          pricePerHour: guider.pricePer,
+                          currencyAccept: guider.currencyAccept,
+                      };
+                  })
+                : [];
+        };
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    guiders: manipulateGuiders(guiders),
+                    PageNumber: page,
+                    Pages: Math.ceil(count / pageSize),
+                },
+            })
+        );
+    } catch (error) {
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
+    }
+});
+export {
+    addGuider,
+    deleteGuider,
+    updateGuiderInfo,
+    getGuiderDetails,
+    allGuiders,
+};
