@@ -3,7 +3,6 @@ import cloudinary from "cloudinary";
 import getDataURI from "../../utlis/dataUri.js";
 import { response } from "../../utlis/generateResponse.js";
 import Events from "../../Models/Events/eventsModel.js";
-import User from "../../Models/User/userModel.js";
 import { getImageName } from "../../utlis/getImageName.js";
 const createEvent = asyncHandler(async (req, res) => {
     try {
