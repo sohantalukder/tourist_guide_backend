@@ -20,7 +20,12 @@ const createEvent = asyncHandler(async (req, res) => {
             endDate,
         } = req.body;
         const image = req.files[0];
-        const creatorId = req.user._id;
+        const creator = {
+            id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            image: req.user.image,
+        };
         const imageURI = await getDataURI(image);
         const cloudImage = await cloudinary.v2.uploader.upload(
             imageURI.content,
@@ -38,7 +43,7 @@ const createEvent = asyncHandler(async (req, res) => {
             startDate,
             endDate,
             image: cloudImage.secure_url,
-            creatorId,
+            creator,
         });
         return res.status(201).json(
             response({
@@ -72,7 +77,7 @@ const updateEventInfo = asyncHandler(async (req, res) => {
         const event = await Events.findOne({ _id: req.params.id });
         const image = req.files[0];
         if (event) {
-            if (req.user._id == event.creatorId) {
+            if (req.user._id == event.creator.id || req.user.role === "admin") {
                 if (image) {
                     const imageURI = await getDataURI(image);
                     const cloudImage = await cloudinary.v2.uploader.upload(
@@ -130,7 +135,6 @@ const updateEventInfo = asyncHandler(async (req, res) => {
 });
 const eventDetails = asyncHandler(async (req, res) => {
     const event = await Events.findById(req.params.id);
-    const creator = await User.findOne({ _id: event.creatorId });
     if (event) {
         return res.status(200).json(
             response({
@@ -139,10 +143,7 @@ const eventDetails = asyncHandler(async (req, res) => {
                 records: {
                     id: event._id,
                     name: event.name,
-                    creatorId: event.creatorId,
-                    createName: creator.name,
-                    creatorEmail: creator.email,
-                    createImage: creator.image,
+                    creator: event.creator,
                     description: event.description,
                     price: event.price,
                     person: event.person,
@@ -165,7 +166,7 @@ const eventDetails = asyncHandler(async (req, res) => {
 const deleteEvent = asyncHandler(async (req, res) => {
     const event = await Events.findById(req.params.id);
     if (event) {
-        if (event.creatorId == req.user._id) {
+        if (event.creator.id == req.user._id || req.user.role === "admin") {
             event.remove();
             if (event?.image) {
                 cloudinary.v2.uploader.destroy(getImageName(event?.image));
@@ -188,6 +189,64 @@ const deleteEvent = asyncHandler(async (req, res) => {
         return res
             .status(404)
             .json(response({ code: 404, message: "Event not found!" }));
+    }
+});
+const allEvents = asyncHandler(async (req, res) => {
+    try {
+        const pageSize = Number(req.query.pageSize) || 10;
+        const page = Number(req.query.page) || 1;
+        const sortbyID = { _id: -1 };
+        const sortByRating = { react: -1 };
+        const keyword = req.query.keyword
+            ? {
+                  name: {
+                      $regex: req.query.keyword,
+                      $options: "i",
+                  },
+              }
+            : {};
+
+        const count = await Events.countDocuments({ ...keyword });
+        const events = await Events.find({ ...keyword })
+            .sort(sortByRating)
+            .sort(sortbyID)
+            .skip(pageSize * (page - 1));
+        const manipulateEvents = (events) => {
+            return events?.length > 0
+                ? events.map((event) => {
+                      return {
+                          id: event._id,
+                          name: event.name,
+                          contactNumber: event.contactNumber,
+                          email: event.email,
+                          gender: event.gender,
+                          profileImage: event.profileImage,
+                          images: event.images,
+                          locateArea: event.locateArea,
+                          location: event.location,
+                          languages: event.languages,
+                          price: event.price,
+                          pricePerHour: event.pricePer,
+                          currencyAccept: event.currencyAccept,
+                      };
+                  })
+                : [];
+        };
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    events: manipulateEvents(events),
+                    PageNumber: page,
+                    Pages: Math.ceil(count / pageSize),
+                },
+            })
+        );
+    } catch (error) {
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
     }
 });
 export { createEvent, updateEventInfo, eventDetails, deleteEvent };
