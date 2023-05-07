@@ -196,7 +196,6 @@ const allEvents = asyncHandler(async (req, res) => {
         const pageSize = Number(req.query.pageSize) || 10;
         const page = Number(req.query.page) || 1;
         const sortbyID = { _id: -1 };
-        const sortByRating = { react: -1 };
         const keyword = req.query.keyword
             ? {
                   name: {
@@ -208,7 +207,6 @@ const allEvents = asyncHandler(async (req, res) => {
 
         const count = await Events.countDocuments({ ...keyword });
         const events = await Events.find({ ...keyword })
-            .sort(sortByRating)
             .sort(sortbyID)
             .skip(pageSize * (page - 1));
         const manipulateEvents = (events) => {
@@ -217,17 +215,17 @@ const allEvents = asyncHandler(async (req, res) => {
                       return {
                           id: event._id,
                           name: event.name,
-                          contactNumber: event.contactNumber,
-                          email: event.email,
-                          gender: event.gender,
-                          profileImage: event.profileImage,
-                          images: event.images,
-                          locateArea: event.locateArea,
-                          location: event.location,
-                          languages: event.languages,
+                          creator: event.creator,
+                          description: event.description,
                           price: event.price,
-                          pricePerHour: event.pricePer,
-                          currencyAccept: event.currencyAccept,
+                          person: event.person,
+                          pickUpLocation: event.pickUpLocation,
+                          destinationLocation: event.destinationLocation,
+                          image: event.image,
+                          guide: event.guide,
+                          busServices: event.busServices,
+                          startDate: event.startDate,
+                          endDate: event.endDate,
                       };
                   })
                 : [];
@@ -249,4 +247,4 @@ const allEvents = asyncHandler(async (req, res) => {
             .json(response({ code: 500, message: error.message }));
     }
 });
-export { createEvent, updateEventInfo, eventDetails, deleteEvent };
+export { createEvent, updateEventInfo, eventDetails, deleteEvent, allEvents };

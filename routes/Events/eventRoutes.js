@@ -1,5 +1,6 @@
 import express from "express";
 import {
+    allEvents,
     createEvent,
     deleteEvent,
     eventDetails,
@@ -13,7 +14,8 @@ router.route("/create").post(protect, verifiedEmail, upload, createEvent);
 router
     .route("/update/:id")
     .put(protect, verifiedEmail, upload, updateEventInfo);
-router.route("/:id").get(protect, verifiedEmail, eventDetails);
+router.route("/:id").get(eventDetails);
 router.route("/:id").delete(protect, verifiedEmail, deleteEvent);
+router.route("").get(allEvents);
 
 export default router;
