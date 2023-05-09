@@ -307,7 +307,7 @@ const allGuiders = asyncHandler(async (req, res) => {
         const pageSize = Number(req.query.pageSize) || 10;
         const page = Number(req.query.page) || 1;
         const sortbyID = { _id: -1 };
-        const sortByRating = { react: -1 };
+        const sortByRating = { rating: -1 };
         const keyword = req.query.keyword
             ? {
                   name: {

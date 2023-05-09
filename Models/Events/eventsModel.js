@@ -1,7 +1,24 @@
 import mongoose from "mongoose";
 
 const eventSchema = mongoose.Schema({
-    creatorId: { type: String, required: true },
+    creator: {
+        name: {
+            type: String,
+            required: true,
+        },
+        id: {
+            type: String,
+            required: true,
+        },
+        email: {
+            type: String,
+            required: true,
+        },
+        image: {
+            type: String,
+            default: null,
+        },
+    },
     name: { type: String, required: true },
     description: {
         type: String,
