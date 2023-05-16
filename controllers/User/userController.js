@@ -593,42 +593,58 @@ const storeResetPassword = asyncHandler(async (req, res) => {
             .json(response({ code: 500, message: error.message }));
     }
 });
-const loginWithGoogle=asyncHandler(async (req, res)=>{
-    try{
-        const { email, name, picture,email_verified } = req.body;
-        await User.updateOne({ email },{$set:{name, email,image:picture, emailVerify:email_verified}}, { upsert: true });
-        const user = await User.findOne({email})
-        if (user ) {
-                return res.status(200).json(
-                    response({
-                        code: 200,
-                        message: "ok",
-                        records: {
-                            id: user._id,
-                            name: user.name,
-                            email: user.email,
-                            emailVerify: user.emailVerify,
-                            fvtFoods: user.fvtFoods,
-                            fvtPlace: user.fvtPlace,
-                            status: user.status,
-                            role: user.role,
-                            image: user.image,
-                            location: user.location,
-                            contactNumber: user.contactNumber,
-                            description: user.description,
-                            googleLogin:true,
-                            token: generateToken(user._id),
-                        },
-                    })
-                );
-            }
-        
-    }catch(error){
-        return res
-        .json(500)
-        .json(response({ code: 500, message: error.message })); 
+const loginWithGoogle = asyncHandler(async (req, res) => {
+    const { email, name, picture, email_verified } = req.body;
+    try {
+      let user = await User.findOne({ email });
+  
+      if (!user) {
+        user = await User.create({
+          name,
+          email,
+          emailVerify: email_verified,
+          image: picture,
+        });
+      } else {
+        user.name = name;
+        user.emailVerify = email_verified;
+        user.image = picture;
+  
+        await user.save();
+      }
+  
+      return res.status(200).json(
+        response({
+          code: 200,
+          message: "ok",
+          records: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            emailVerify: user.emailVerify,
+            fvtFoods: user.fvtFoods,
+            fvtPlace: user.fvtPlace,
+            status: user.status,
+            role: user.role,
+            image: user.image,
+            location: user.location,
+            contactNumber: user.contactNumber,
+            description: user.description,
+            googleLogin: true,
+            token: generateToken(user._id),
+          },
+        })
+      );
+    } catch (error) {
+      return res.status(500).json(
+        response({
+          code: 500,
+          message: error.message,
+        })
+      );
     }
-})
+  });
+  
 export {
     authUser,
     duplicateEmailCheck,
