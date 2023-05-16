@@ -3,6 +3,7 @@ import {
     authUser,
     changePassword,
     getUser,
+    loginWithGoogle,
     registerUser,
     resendVerifyOTP,
     resetPassword,
@@ -32,6 +33,7 @@ router
 router.route("/resendVerifyOTP").get(protect, resendVerifyOTP);
 router.route("/changePassword").put(protect, verifiedEmail, changePassword);
 router.route("/resetPassword").post(resetPassword);
+router.route("/googleLogin").post(loginWithGoogle);
 router.route("/resetPassword/verify").post(verifyResetPassword);
 router
     .route("/resetPassword/store")
