@@ -81,18 +81,18 @@ const registerUser = asyncHandler(async (req, res) => {
                     .json(
                         response({ code: 400, message: "Empty input fields!" })
                     );
-            case !/^[a-zA-z ]*$/.test(name):
+            case !name:
                 return res.status(400).json(
                     response({
                         code: 400,
-                        message: "Invalid name entered!",
+                        message: "Entered Name!",
                     })
                 );
             case !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email):
                 return res
                     .status(400)
                     .json({ error: "Invalid email entered!" });
-            case password.length < 8:
+            case password.length < 6:
                 return res.status(400).json(
                     response({
                         code: 400,
@@ -118,10 +118,24 @@ const registerUser = asyncHandler(async (req, res) => {
                 .status(400)
                 .json(response({ code: 400, message: "Invalid user data" }));
         }
-        sendOTPVerificationEmail({
-            user,
-            res,
-        });
+        return (
+            res.status(201).json(
+                response({
+                    code: 201,
+                    message: "Successfully Registration!",
+                    records: {
+                        id: user._id,
+                        userStatus: user.status,
+                        emailVerify: user.emailVerify,
+                        token: generateToken(user._id),
+                    },
+                })
+            ),
+            sendOTPVerificationEmail({
+                user,
+                res,
+            })
+        );
     } catch (error) {
         return res
             .status(500)
@@ -132,7 +146,7 @@ const registerUser = asyncHandler(async (req, res) => {
 //send otp verification email
 const sendOTPVerificationEmail = async ({ user, res }) => {
     try {
-        const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
+        const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
         const mailOptions = {
             from: '"Tourist Guide" <tourists.guides2@gmail.com>',
             to: user.email,
@@ -152,12 +166,6 @@ const sendOTPVerificationEmail = async ({ user, res }) => {
             response({
                 code: 202,
                 message: "Verification OTP sent to your email!",
-                records: {
-                    id: user._id,
-                    userStatus: user.status,
-                    emailVerify: user.emailVerify,
-                    token: generateToken(user._id),
-                },
             })
         );
     } catch (error) {
@@ -171,92 +179,86 @@ const sendOTPVerificationEmail = async ({ user, res }) => {
 };
 
 const verifyOTP = asyncHandler(async (req, res) => {
-    try {
-        const { otp } = req.body;
-        if (!req.user._id || !otp) {
-            return res.status(401).json(
-                response({
-                    code: 401,
-                    message: "Empty otp details are not allowed",
-                })
-            );
-        } else {
-            const userOtpVerificationRecords = await UserOtpVerification.find({
-                userId: req.user._id,
-            });
-            if (
-                !userOtpVerificationRecords ||
-                userOtpVerificationRecords <= 0
-            ) {
-                return res.status(401).json(
-                    response({
-                        code: 401,
-                        message:
-                            "Account record doesn't exit or has been verified already. Please sign up or log in",
-                    })
-                );
-            } else {
-                const { expiredAt, otp: recordOtp } =
-                    userOtpVerificationRecords[0];
-                if (expiredAt < Date.now()) {
-                    await UserOptVerification.deleteMany({
-                        userId: req.user._id,
-                    });
-                    return res.status(401).json(
-                        response({
-                            code: 401,
-                            message: "Code has expired. Please request again!",
-                        })
-                    );
-                } else {
-                    const validOtp = otp === recordOtp;
-                    if (!validOtp) {
-                        return res.status(401).json(
-                            response({
-                                code: 401,
-                                message:
-                                    "Invalid code passed. Check your inbox!",
-                            })
-                        );
-                    } else {
-                        const getUser = await User.findOne({
-                            _id: req.user._id,
-                        });
-                        getUser.emailVerify = true;
-                        const updatedUser = await getUser.save();
-                        return res.status(201).json(
-                            response({
-                                code: 201,
-                                message: "User email verified successfully",
-                                records: {
-                                    id: updatedUser._id,
-                                    name: updatedUser.name,
-                                    email: updatedUser.email,
-                                    emailVerify: updatedUser.emailVerify,
-                                    fvtFoods: updatedUser.fvtFoods,
-                                    fvtPlace: updatedUser.fvtPlace,
-                                    status: updatedUser.status,
-                                    role: updatedUser.role,
-                                    image: updatedUser.image,
-                                    location: updatedUser.location,
-                                    contactNumber: updatedUser.contactNumber,
-                                    description: updatedUser.description,
-                                    token: generateToken(updatedUser._id),
-                                },
-                            })
-                        );
-                    }
-                }
-            }
-        }
-    } catch (error) {
+    const { otp } = req.body;
+    if (!req.user._id || !otp) {
         return res.status(401).json(
             response({
                 code: 401,
-                message: error.message,
+                message: "Empty otp details are not allowed",
             })
         );
     }
+
+    const userOtpVerificationRecords = await UserOtpVerification.find({
+        userId: req.user._id,
+    });
+
+    if (
+        !userOtpVerificationRecords ||
+        userOtpVerificationRecords.length === 0
+    ) {
+        return res.status(401).json(
+            response({
+                code: 401,
+                message:
+                    "Account record doesn't exist or has been verified already. Please sign up or log in",
+            })
+        );
+    }
+
+    const { expiredAt, otp: recordOtp } = userOtpVerificationRecords[0];
+
+    if (expiredAt < Date.now()) {
+        await UserOtpVerification.deleteMany({
+            userId: req.user._id,
+        });
+
+        return res.status(401).json(
+            response({
+                code: 401,
+                message: "Code has expired. Please request again!",
+            })
+        );
+    }
+
+    const validOtp = otp === recordOtp;
+
+    if (!validOtp) {
+        return res.status(401).json(
+            response({
+                code: 401,
+                message: "Invalid code passed. Check your inbox!",
+            })
+        );
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+        { _id: req.user._id },
+        { emailVerify: true },
+        { new: true }
+    );
+
+    return res.status(201).json(
+        response({
+            code: 201,
+            message: "User email verified successfully",
+            records: {
+                id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                emailVerify: updatedUser.emailVerify,
+                fvtFoods: updatedUser.fvtFoods,
+                fvtPlace: updatedUser.fvtPlace,
+                status: updatedUser.status,
+                role: updatedUser.role,
+                image: updatedUser.image,
+                location: updatedUser.location,
+                contactNumber: updatedUser.contactNumber,
+                description: updatedUser.description,
+                token: generateToken(updatedUser._id),
+            },
+        })
+    );
 });
 
 const getUser = asyncHandler(async (req, res) => {
@@ -596,55 +598,55 @@ const storeResetPassword = asyncHandler(async (req, res) => {
 const loginWithGoogle = asyncHandler(async (req, res) => {
     const { email, name, picture, email_verified } = req.body;
     try {
-      let user = await User.findOne({ email });
-  
-      if (!user) {
-        user = await User.create({
-          name,
-          email,
-          emailVerify: email_verified,
-          image: picture,
-        });
-      } else {
-        user.name = name;
-        user.emailVerify = email_verified;
-        user.image = picture;
-  
-        await user.save();
-      }
-  
-      return res.status(200).json(
-        response({
-          code: 200,
-          message: "ok",
-          records: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            emailVerify: user.emailVerify,
-            fvtFoods: user.fvtFoods,
-            fvtPlace: user.fvtPlace,
-            status: user.status,
-            role: user.role,
-            image: user.image,
-            location: user.location,
-            contactNumber: user.contactNumber,
-            description: user.description,
-            googleLogin: true,
-            token: generateToken(user._id),
-          },
-        })
-      );
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = await User.create({
+                name,
+                email,
+                emailVerify: email_verified,
+                image: picture,
+            });
+        } else {
+            user.name = name;
+            user.emailVerify = email_verified;
+            user.image = picture;
+
+            await user.save();
+        }
+
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "ok",
+                records: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    emailVerify: user.emailVerify,
+                    fvtFoods: user.fvtFoods,
+                    fvtPlace: user.fvtPlace,
+                    status: user.status,
+                    role: user.role,
+                    image: user.image,
+                    location: user.location,
+                    contactNumber: user.contactNumber,
+                    description: user.description,
+                    googleLogin: true,
+                    token: generateToken(user._id),
+                },
+            })
+        );
     } catch (error) {
-      return res.status(500).json(
-        response({
-          code: 500,
-          message: error.message,
-        })
-      );
+        return res.status(500).json(
+            response({
+                code: 500,
+                message: error.message,
+            })
+        );
     }
-  });
-  
+});
+
 export {
     authUser,
     duplicateEmailCheck,
@@ -658,5 +660,5 @@ export {
     resetPassword,
     verifyResetPassword,
     storeResetPassword,
-    loginWithGoogle
+    loginWithGoogle,
 };
