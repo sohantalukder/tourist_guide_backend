@@ -283,15 +283,14 @@ const getUser = asyncHandler(async (req, res) => {
                 },
             })
         );
-    } else {
-        return res
-            .status(404)
-            .json(response({ code: 404, message: "User not found!" }));
     }
+    return res
+        .status(404)
+        .json(response({ code: 404, message: "User not found!" }));
 });
 const resendVerifyOTP = asyncHandler(async (req, res) => {
     try {
-        const user = await User.findOne(req.user._id);
+        const user = req.user._id;
         if (user && !user.emailVerify) {
             await UserOptVerification.deleteOne({
                 userId: req.user._id,
@@ -383,7 +382,7 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
 });
 const changePassword = asyncHandler(async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).select("+password");
+        const user = req.user;
         const { oldPassword, newPassword } = req.body;
         if (user) {
             if (await user.comparePassword(oldPassword)) {
@@ -419,7 +418,7 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 const sendOTPResetPassword = async ({ user, res }) => {
     try {
-        const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
+        const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
         const mailOptions = {
             from: '"Tourist Guide" <tourists.guides2@gmail.com>',
             to: user.email,
