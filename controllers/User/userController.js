@@ -34,11 +34,18 @@ const authUser = asyncHandler(async (req, res) => {
 
         if (!emailVerify) {
             return (
-                res
-                    .status(202)
-                    .json(
-                        response({ code: 202, message: "Verify your account!" })
-                    ),
+                res.status(202).json(
+                    response({
+                        code: 202,
+                        message: "Verify your account!",
+                        records: {
+                            id: _id,
+                            userStatus: status,
+                            emailVerify: emailVerify,
+                            token: generateToken(_id),
+                        },
+                    })
+                ),
                 sendOTPVerificationEmail({
                     user,
                     res,
