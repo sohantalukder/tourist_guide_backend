@@ -15,31 +15,60 @@ import { transporter } from "../../config/SMTP_Config.js";
 const authUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).select("+password");
+
     if (user && (await user.comparePassword(password))) {
-        if (!user.emailVerify) {
-            sendOTPVerificationEmail({ user, res });
-        } else {
-            return res.status(200).json(
-                response({
-                    code: 200,
-                    message: "ok",
-                    records: {
-                        id: user._id,
-                        name: user.name,
-                        email: user.email,
-                        emailVerify: user.emailVerify,
-                        fvtFoods: user.fvtFoods,
-                        fvtPlace: user.fvtPlace,
-                        status: user.status,
-                        role: user.role,
-                        image: user.image,
-                        location: user.location,
-                        contactNumber: user.contactNumber,
-                        description: user.description,
-                        token: generateToken(user._id),
-                    },
+        const {
+            _id,
+            name,
+            email,
+            emailVerify,
+            fvtFoods,
+            fvtPlace,
+            status,
+            role,
+            image,
+            location,
+            contactNumber,
+            description,
+        } = user;
+
+        if (!emailVerify) {
+            return (
+                res
+                    .status(202)
+                    .json(
+                        response({ code: 202, message: "Verify your account!" })
+                    ),
+                sendOTPVerificationEmail({
+                    user,
+                    res,
                 })
             );
+        } else {
+            const message = "ok";
+            const code = 200;
+
+            const responseObj = response({
+                code,
+                message,
+                records: {
+                    id: _id,
+                    name,
+                    email,
+                    emailVerify,
+                    fvtFoods,
+                    fvtPlace,
+                    status,
+                    role,
+                    image,
+                    location,
+                    contactNumber,
+                    description,
+                    token: generateToken(_id),
+                },
+            });
+
+            return res.status(code).json(responseObj);
         }
     } else {
         return res
@@ -162,12 +191,6 @@ const sendOTPVerificationEmail = async ({ user, res }) => {
         });
         await newOTPVerification.save();
         await transporter().sendMail(mailOptions);
-        return res.status(202).json(
-            response({
-                code: 202,
-                message: "Verification OTP sent to your email!",
-            })
-        );
     } catch (error) {
         return res.status(401).json(
             response({
