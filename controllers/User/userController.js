@@ -320,12 +320,20 @@ const getUser = asyncHandler(async (req, res) => {
 });
 const resendVerifyOTP = asyncHandler(async (req, res) => {
     try {
-        const user = req.user._id;
+        const user = req.user;
         if (user && !user.emailVerify) {
             await UserOptVerification.deleteOne({
                 userId: req.user._id,
             });
-            sendOTPVerificationEmail({ user, res });
+            return (
+                res.status(200).json(
+                    response({
+                        code: 200,
+                        message: "OTP send to your email!",
+                    })
+                ),
+                sendOTPVerificationEmail({ user, res })
+            );
         } else {
             return res.status(401).json(
                 response({
