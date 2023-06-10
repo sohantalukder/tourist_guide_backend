@@ -236,7 +236,8 @@ const verifyOTP = asyncHandler(async (req, res) => {
         );
     }
 
-    const { expiredAt, otp: recordOtp } = userOtpVerificationRecords[0];
+    const { expiredAt, otp: recordOtp } =
+        userOtpVerificationRecords[userOtpVerificationRecords?.length - 1];
 
     if (expiredAt < Date.now()) {
         await UserOtpVerification.deleteMany({
@@ -250,7 +251,6 @@ const verifyOTP = asyncHandler(async (req, res) => {
             })
         );
     }
-
     const validOtp = otp === recordOtp;
 
     if (!validOtp) {
