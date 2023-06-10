@@ -268,9 +268,9 @@ const verifyOTP = asyncHandler(async (req, res) => {
         { new: true }
     );
 
-    return res.status(201).json(
+    return res.status(200).json(
         response({
-            code: 201,
+            code: 200,
             message: "User email verified successfully",
             records: {
                 id: updatedUser._id,

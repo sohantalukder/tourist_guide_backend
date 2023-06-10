@@ -47,15 +47,12 @@ const protectResetPassword = asyncHandler(async (req, res, next) => {
                 next();
             }
         } catch (error) {
-            console.error(error);
-            return res
-                .status(401)
-                .json(
-                    response({
-                        code: 401,
-                        message: "Not authorized, token failed",
-                    })
-                );
+            return res.status(401).json(
+                response({
+                    code: 401,
+                    message: "Not authorized, token failed",
+                })
+            );
         }
     }
     if (!token) {
