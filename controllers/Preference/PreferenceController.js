@@ -23,6 +23,8 @@ const updatePreference = asyncHandler(async (req, res) => {
             primaryEmail,
             secondaryEmail,
             address,
+            linkedinURL,
+            twitterURL,
         } = req.body;
         const logos = req.files;
         let blackLogoResult, whiteLogoResult;
@@ -72,6 +74,8 @@ const updatePreference = asyncHandler(async (req, res) => {
         preference.pinterestURL = pinterestURL || preference.pinterestURL;
         preference.instagramURL = instagramURL || preference.instagramURL;
         preference.githubURL = githubURL || preference.githubURL;
+        preference.linkedinURL = linkedinURL || preference.linkedinURL;
+        preference.twitterURL = twitterURL || preference.twitterURL;
         preference.primaryContactNumber =
             primaryContactNumber || preference.primaryContactNumber;
         preference.secondaryContactNumber =
