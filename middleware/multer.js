@@ -7,7 +7,7 @@ const multerConfig = multer({
     storage: storage,
     limits: { fileSize: 2 * 1024 * 1024 },
     fileFilter: (req, file, callback) => {
-        const acceptableExtensions = ["png", "jpg", "jpeg", "jpg"];
+        const acceptableExtensions = ["png", "jpg", "jpeg", "jpg", "svg"];
         if (
             !acceptableExtensions.some(
                 (extension) =>
