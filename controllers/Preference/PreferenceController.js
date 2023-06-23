@@ -97,51 +97,67 @@ const updatePreference = asyncHandler(async (req, res) => {
     }
 });
 const getPreference = asyncHandler(async (req, res) => {
-    try {
-        const preference = await Preferences.findOne({});
-        if (preference) {
-            return res.status(200).json(
-                response({
-                    code: 200,
-                    message: "Ok",
-                    records: {
-                        website_name: preference.website_name,
-                        website_keywords: preference.website_keywords,
-                        website_keywords: preference.website_keywords,
-                        website_copyright: preference.website_copyright,
-                        logos: {
-                            blackLogo: preference.blackLogo,
-                            whiteLogo: preference.whiteLogo,
-                        },
-                        address: preference.address,
-                        facebookURL: preference.facebookURL,
-                        youtubeURL: preference.youtubeURL,
-                        twitterURL: preference.twitterURL,
-                        whatsapp: preference.whatsapp,
-                        linkedinURL: preference.linkedinURL,
-                        pinterestURL: preference.pinterestURL,
-                        instagramURL: preference.instagramURL,
-                        githubURL: preference.githubURL,
-                        primaryContactNumber: preference.primaryContactNumber,
-                        secondaryContactNumber:
-                            preference.secondaryContactNumber,
-                        primaryEmail: preference.primaryEmail,
-                        secondaryEmail: preference.secondaryEmail,
-                    },
-                })
-            );
-        } else {
-            return res
-                .status(500)
-                .json(
-                    response({ code: 500, message: "Internal Server Error!" })
-                );
-        }
-    } catch (error) {
+    const preference = await Preferences.findOne({});
+
+    if (!preference) {
         return res
             .status(500)
-            .json(response({ code: 500, message: error.message }));
+            .json(response({ code: 500, message: "Internal Server Error!" }));
     }
+
+    const {
+        website_name,
+        website_keywords,
+        website_description,
+        website_copyright,
+        blackLogo,
+        whiteLogo,
+        address,
+        facebookURL,
+        youtubeURL,
+        twitterURL,
+        whatsapp,
+        linkedinURL,
+        pinterestURL,
+        instagramURL,
+        githubURL,
+        primaryContactNumber,
+        secondaryContactNumber,
+        primaryEmail,
+        secondaryEmail,
+    } = preference;
+
+    const records = {
+        website_name,
+        website_keywords,
+        website_description,
+        website_copyright,
+        logos: {
+            blackLogo,
+            whiteLogo,
+        },
+        address,
+        facebookURL,
+        youtubeURL,
+        twitterURL,
+        whatsapp,
+        linkedinURL,
+        pinterestURL,
+        instagramURL,
+        githubURL,
+        primaryContactNumber,
+        secondaryContactNumber,
+        primaryEmail,
+        secondaryEmail,
+    };
+
+    return res.status(200).json(
+        response({
+            code: 200,
+            message: "Ok",
+            records,
+        })
+    );
 });
 
 export { updatePreference, getPreference };
