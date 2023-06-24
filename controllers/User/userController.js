@@ -363,6 +363,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
             user.fvtFoods = fvtFoods || user.fvtFoods;
             user.fvtPlace = fvtPlace || user.fvtPlace;
             user.location = location || user.location;
+            user.description = description || user.description;
             user.contactNumber = contactNumber || user.contactNumber;
             await user.save();
             return res.status(200).json(
