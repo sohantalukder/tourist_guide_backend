@@ -288,6 +288,7 @@ const getGuiderDetails = asyncHandler(async (req, res) => {
                         price: guider.price,
                         pricePerHour: guider.pricePer,
                         currencyAccept: guider.currencyAccept,
+                        rating: guider.rating,
                     },
                 })
             );
@@ -339,6 +340,7 @@ const allGuiders = asyncHandler(async (req, res) => {
                           price: guider.price,
                           pricePerHour: guider.pricePer,
                           currencyAccept: guider.currencyAccept,
+                          rating: guider.rating,
                       };
                   })
                 : [];
@@ -360,10 +362,51 @@ const allGuiders = asyncHandler(async (req, res) => {
             .json(response({ code: 500, message: error.message }));
     }
 });
+const getTopGuiders = asyncHandler(async (req, res) => {
+    try {
+        const guiders = await Guiders.find({}).sort({ rating: -1 }).limit(6);
+        const manipulateGuiders = (guiders) => {
+            return guiders?.length > 0
+                ? guiders.map((guider) => {
+                      return {
+                          id: guider._id,
+                          name: guider.name,
+                          contactNumber: guider.contactNumber,
+                          email: guider.email,
+                          gender: guider.gender,
+                          profileImage: guider.profileImage,
+                          images: guider.images,
+                          locateArea: guider.locateArea,
+                          location: guider.location,
+                          languages: guider.languages,
+                          price: guider.price,
+                          pricePerHour: guider.pricePer,
+                          currencyAccept: guider.currencyAccept,
+                          rating: guider.rating,
+                      };
+                  })
+                : [];
+        };
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    guiders: manipulateGuiders(guiders),
+                },
+            })
+        );
+    } catch (error) {
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
+    }
+});
 export {
     addGuider,
     deleteGuider,
     updateGuiderInfo,
     getGuiderDetails,
     allGuiders,
+    getTopGuiders,
 };
