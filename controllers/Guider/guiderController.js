@@ -383,6 +383,7 @@ const getTopGuiders = asyncHandler(async (req, res) => {
                           pricePerHour: guider.pricePer,
                           currencyAccept: guider.currencyAccept,
                           rating: guider.rating,
+                          description: guider.description,
                       };
                   })
                 : [];
