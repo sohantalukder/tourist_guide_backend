@@ -182,7 +182,7 @@ const registerUser = asyncHandler(async (req, res) => {
 //send otp verification email
 const sendOTPVerificationEmail = async ({ user, res }) => {
     try {
-        const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
+        const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
         const mailOptions = {
             from: '"Tourist Guide" <tourists.guides2@gmail.com>',
             to: user.email,
