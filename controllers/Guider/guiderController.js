@@ -275,7 +275,7 @@ const getGuiderDetails = asyncHandler(async (req, res) => {
                     code: 200,
                     message: "Ok",
                     records: {
-                        id: guider._id,
+                        _id: guider._id,
                         name: guider.name,
                         contactNumber: guider.contactNumber,
                         email: guider.email,
@@ -319,38 +319,36 @@ const allGuiders = asyncHandler(async (req, res) => {
             : {};
 
         const count = await Guiders.countDocuments({ ...keyword });
-        const guiders = await Guiders.find({ ...keyword })
+        const guiders = await Guiders.find(
+            { ...keyword },
+            {
+                _id: 1,
+                name: 1,
+                contactNumber: 1,
+                email: 1,
+                gender: 1,
+                profileImage: 1,
+                images: 1,
+                localArea: 1,
+                location: 1,
+                languages: 1,
+                price: 1,
+                pricePerHour: "$pricePer",
+                currencyAccept: 1,
+                rating: 1,
+            }
+        )
             .sort(sortByRating)
             .sort(sortbyID)
-            .skip(pageSize * (page - 1));
-        const manipulateGuiders = (guiders) => {
-            return guiders?.length > 0
-                ? guiders.map((guider) => {
-                      return {
-                          id: guider._id,
-                          name: guider.name,
-                          contactNumber: guider.contactNumber,
-                          email: guider.email,
-                          gender: guider.gender,
-                          profileImage: guider.profileImage,
-                          images: guider.images,
-                          locateArea: guider.locateArea,
-                          location: guider.location,
-                          languages: guider.languages,
-                          price: guider.price,
-                          pricePerHour: guider.pricePer,
-                          currencyAccept: guider.currencyAccept,
-                          rating: guider.rating,
-                      };
-                  })
-                : [];
-        };
+            .skip(pageSize * (page - 1))
+            .limit(pageSize);
+
         return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
                 records: {
-                    guiders: manipulateGuiders(guiders),
+                    data: guiders,
                     PageNumber: page,
                     Pages: Math.ceil(count / pageSize),
                 },

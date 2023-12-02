@@ -14,7 +14,7 @@ const adminLogin = asyncHandler(async (req, res) => {
                     message: "Ok",
                     records: {
                         records: {
-                            id: user._id,
+                            _id: user._id,
                             name: user.name,
                             email: user.email,
                             emailVerify: user.emailVerify,
@@ -50,15 +50,31 @@ const adminLogin = asyncHandler(async (req, res) => {
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
-    const sort = { _id: -1 };
-    const users = await User.find({}).sort(sort);
+    const pageSize = Number(req.query.pageSize) || 10;
+    const page = Number(req.query.page) || 1;
+    const sortbyID = { _id: -1 };
+    const keyword = req.query.keyword
+        ? {
+              name: {
+                  $regex: req.query.keyword,
+                  $options: "i",
+              },
+          }
+        : {};
+    const count = await User.countDocuments({ ...keyword });
+    const users = await User.find({ ...keyword })
+        .sort(sortbyID)
+        .skip(pageSize * (page - 1))
+        .limit(pageSize);
     if (users?.length > 0) {
         return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
                 records: {
-                    users,
+                    data: users,
+                    PageNumber: page,
+                    Pages: Math.ceil(count / pageSize),
                 },
             })
         );
