@@ -275,7 +275,7 @@ const getGuiderDetails = asyncHandler(async (req, res) => {
                     code: 200,
                     message: "Ok",
                     records: {
-                        id: guider._id,
+                        _id: guider._id,
                         name: guider.name,
                         contactNumber: guider.contactNumber,
                         email: guider.email,
@@ -288,6 +288,7 @@ const getGuiderDetails = asyncHandler(async (req, res) => {
                         price: guider.price,
                         pricePerHour: guider.pricePer,
                         currencyAccept: guider.currencyAccept,
+                        rating: guider.rating,
                     },
                 })
             );
@@ -318,10 +319,50 @@ const allGuiders = asyncHandler(async (req, res) => {
             : {};
 
         const count = await Guiders.countDocuments({ ...keyword });
-        const guiders = await Guiders.find({ ...keyword })
+        const guiders = await Guiders.find(
+            { ...keyword },
+            {
+                _id: 1,
+                name: 1,
+                contactNumber: 1,
+                email: 1,
+                gender: 1,
+                profileImage: 1,
+                images: 1,
+                localArea: 1,
+                location: 1,
+                languages: 1,
+                price: 1,
+                pricePerHour: "$pricePer",
+                currencyAccept: 1,
+                rating: 1,
+            }
+        )
             .sort(sortByRating)
             .sort(sortbyID)
-            .skip(pageSize * (page - 1));
+            .skip(pageSize * (page - 1))
+            .limit(pageSize);
+
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Ok",
+                records: {
+                    data: guiders,
+                    PageNumber: page,
+                    Pages: Math.ceil(count / pageSize),
+                },
+            })
+        );
+    } catch (error) {
+        return res
+            .status(500)
+            .json(response({ code: 500, message: error.message }));
+    }
+});
+const getTopGuiders = asyncHandler(async (req, res) => {
+    try {
+        const guiders = await Guiders.find({}).sort({ rating: -1 }).limit(6);
         const manipulateGuiders = (guiders) => {
             return guiders?.length > 0
                 ? guiders.map((guider) => {
@@ -339,6 +380,8 @@ const allGuiders = asyncHandler(async (req, res) => {
                           price: guider.price,
                           pricePerHour: guider.pricePer,
                           currencyAccept: guider.currencyAccept,
+                          rating: guider.rating,
+                          description: guider.description,
                       };
                   })
                 : [];
@@ -349,8 +392,6 @@ const allGuiders = asyncHandler(async (req, res) => {
                 message: "Ok",
                 records: {
                     guiders: manipulateGuiders(guiders),
-                    PageNumber: page,
-                    Pages: Math.ceil(count / pageSize),
                 },
             })
         );
@@ -366,4 +407,5 @@ export {
     updateGuiderInfo,
     getGuiderDetails,
     allGuiders,
+    getTopGuiders,
 };

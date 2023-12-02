@@ -99,22 +99,14 @@ const deleteDivision = asyncHandler(async (req, res) => {
 const allDivisions = asyncHandler(async (req, res) => {
     try {
         const sortbyID = { _id: -1 };
-        const divisions = await Divisions.find().sort(sortbyID);
-        const manipulateDivisions = (divisions) => {
-            return divisions?.length > 0
-                ? divisions.map((division) => {
-                      return {
-                          divisionCode: division.division_code,
-                          name: division.name,
-                      };
-                  })
-                : [];
-        };
+        const divisions = await Divisions.find()
+            .select("division_code name")
+            .sort(sortbyID);
         return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
-                records: manipulateDivisions(divisions),
+                records: divisions,
             })
         );
     } catch (error) {
@@ -226,29 +218,10 @@ const allDistricts = asyncHandler(async (req, res) => {
     try {
         const division = await Divisions.findOne({
             division_code: req.params.code,
-        });
-        const manipulateDistricts = (districts) => {
-            return districts?.length > 0
-                ? districts
-                      .map((district) => {
-                          return {
-                              name: district.name,
-                              division_code: district.division_code,
-                              district_code: district.district_code,
-                              geocode: district.geocode,
-                          };
-                      })
-                      .sort(function (a, b) {
-                          if (a.district_code < b.district_code) {
-                              return -1;
-                          }
-                          if (a.district_code > b.district_code) {
-                              return 1;
-                          }
-                          return 0;
-                      })
-                : [];
-        };
+        }).select(
+            "districts.name districts.division_code districts.district_code districts.geocode"
+        );
+
         if (!division) {
             return res.status(422).json(
                 response({
@@ -257,11 +230,22 @@ const allDistricts = asyncHandler(async (req, res) => {
                 })
             );
         }
+
+        const districts = division.districts.sort((a, b) => {
+            if (a.district_code < b.district_code) {
+                return -1;
+            }
+            if (a.district_code > b.district_code) {
+                return 1;
+            }
+            return 0;
+        });
+
         return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
-                records: manipulateDistricts(division?.districts),
+                records: districts,
             })
         );
     } catch (error) {
@@ -422,32 +406,10 @@ const updateSubDistrict = asyncHandler(async (req, res) => {
 const allSubDistrict = asyncHandler(async (req, res) => {
     try {
         const { code, districtCode } = req.params;
-        const division = await Divisions.findOne({
-            division_code: code,
-        });
-        const manipulateUpazilas = (upazilas) => {
-            return upazilas?.length > 0
-                ? upazilas
-                      .map((upazila) => {
-                          return {
-                              name: upazila.name,
-                              division_code: upazila.division_code,
-                              district_code: upazila.district_code,
-                              postalCode: upazila.postalCode,
-                              geocode: upazila.geocode,
-                          };
-                      })
-                      .sort(function (a, b) {
-                          if (a.postalCode < b.postalCode) {
-                              return -1;
-                          }
-                          if (a.postalCode > b.postalCode) {
-                              return 1;
-                          }
-                          return 0;
-                      })
-                : [];
-        };
+        const division = await Divisions.findOne(
+            { division_code: code, "districts.district_code": districtCode },
+            { "districts.$": 1 }
+        );
         if (!division) {
             return res.status(422).json(
                 response({
@@ -456,9 +418,7 @@ const allSubDistrict = asyncHandler(async (req, res) => {
                 })
             );
         }
-        const district = division.districts.find(
-            (district) => district.district_code == districtCode
-        );
+        const district = division.districts[0];
         if (!district) {
             return res.status(422).json(
                 response({
@@ -467,11 +427,20 @@ const allSubDistrict = asyncHandler(async (req, res) => {
                 })
             );
         }
+        const upazilas = district.upazilas.sort((a, b) => {
+            if (a.postalCode < b.postalCode) {
+                return -1;
+            }
+            if (a.postalCode > b.postalCode) {
+                return 1;
+            }
+            return 0;
+        });
         return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
-                records: manipulateUpazilas(district?.upazilas),
+                records: upazilas,
             })
         );
     } catch (error) {

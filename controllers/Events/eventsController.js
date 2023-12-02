@@ -205,36 +205,33 @@ const allEvents = asyncHandler(async (req, res) => {
             : {};
 
         const count = await Events.countDocuments({ ...keyword });
-        const events = await Events.find({ ...keyword })
+        const events = await Events.find(
+            { ...keyword },
+            {
+                _id: 1,
+                name: 1,
+                creator: 1,
+                description: 1,
+                price: 1,
+                person: 1,
+                pickUpLocation: 1,
+                destinationLocation: 1,
+                image: 1,
+                guide: 1,
+                busServices: 1,
+                startDate: 1,
+                endDate: 1,
+            }
+        )
             .sort(sortbyID)
-            .skip(pageSize * (page - 1));
-        const manipulateEvents = (events) => {
-            return events?.length > 0
-                ? events.map((event) => {
-                      return {
-                          id: event._id,
-                          name: event.name,
-                          creator: event.creator,
-                          description: event.description,
-                          price: event.price,
-                          person: event.person,
-                          pickUpLocation: event.pickUpLocation,
-                          destinationLocation: event.destinationLocation,
-                          image: event.image,
-                          guide: event.guide,
-                          busServices: event.busServices,
-                          startDate: event.startDate,
-                          endDate: event.endDate,
-                      };
-                  })
-                : [];
-        };
+            .skip(pageSize * (page - 1))
+            .limit(pageSize);
         return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
                 records: {
-                    events: manipulateEvents(events),
+                    data: events,
                     PageNumber: page,
                     Pages: Math.ceil(count / pageSize),
                 },

@@ -6,6 +6,7 @@ import {
     allGuiders,
     deleteGuider,
     getGuiderDetails,
+    getTopGuiders,
     updateGuiderInfo,
 } from "../../controllers/Guider/guiderController.js";
 const router = express.Router();
@@ -17,5 +18,6 @@ router
     .put(protect, verifiedEmail, upload, updateGuiderInfo);
 router.route("/:id").get(getGuiderDetails);
 router.route("").get(allGuiders);
+router.route("/top/list").get(getTopGuiders);
 
 export default router;

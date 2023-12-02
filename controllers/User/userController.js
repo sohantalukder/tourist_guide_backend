@@ -39,7 +39,7 @@ const authUser = asyncHandler(async (req, res) => {
                         code: 202,
                         message: "Verify your account!",
                         records: {
-                            id: _id,
+                            _id: _id,
                             userStatus: status,
                             emailVerify: emailVerify,
                             token: generateToken(_id),
@@ -160,7 +160,7 @@ const registerUser = asyncHandler(async (req, res) => {
                     code: 201,
                     message: "Successfully Registration!",
                     records: {
-                        id: user._id,
+                        _id: user._id,
                         userStatus: user.status,
                         emailVerify: user.emailVerify,
                         token: generateToken(user._id),
@@ -182,7 +182,7 @@ const registerUser = asyncHandler(async (req, res) => {
 //send otp verification email
 const sendOTPVerificationEmail = async ({ user, res }) => {
     try {
-        const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
+        const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
         const mailOptions = {
             from: '"Tourist Guide" <tourists.guides2@gmail.com>',
             to: user.email,
@@ -299,7 +299,7 @@ const getUser = asyncHandler(async (req, res) => {
                 code: 200,
                 message: "Ok",
                 records: {
-                    id: user._id,
+                    _id: user._id,
                     name: user.name,
                     email: user.email,
                     fvtFoods: user.fvtFoods,
@@ -658,7 +658,7 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
                 code: 200,
                 message: "ok",
                 records: {
-                    id: user._id,
+                    _id: user._id,
                     name: user.name,
                     email: user.email,
                     emailVerify: user.emailVerify,

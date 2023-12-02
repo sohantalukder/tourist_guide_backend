@@ -61,38 +61,33 @@ const allBlogsList = asyncHandler(async (req, res) => {
                   },
               }
             : {};
-
         const count = await Blog.countDocuments({ ...keyword });
-        const blogs = await Blog.find({ ...keyword })
+        const blogs = await Blog.find(
+            { ...keyword },
+            {
+                _id: 1,
+                "creatorInfo.id": "$creatorId",
+                "creatorInfo.name": "$creatorName",
+                "creatorInfo.image": "$creatorImage",
+                "creatorInfo.location": "$creatorLocation",
+                title: 1,
+                images: 1,
+                description: 1,
+                react: 1,
+                createdAt: "$createAt",
+            }
+        )
             .sort(sortByRating)
             .sort(sortbyID)
-            .skip(pageSize * (page - 1));
-        const manipulateBlogs = (blogs) => {
-            return blogs?.length > 0
-                ? blogs.map((blog) => {
-                      return {
-                          id: blog.id,
-                          creatorInfo: {
-                              id: blog.creatorId,
-                              name: blog.creatorName,
-                              image: blog.creatorImage,
-                              location: blog.creatorLocation,
-                          },
-                          title: blog.title,
-                          images: blog.images,
-                          description: blog.description,
-                          react: blog.react,
-                          createdAt: blog.createAt,
-                      };
-                  })
-                : [];
-        };
+            .skip(pageSize * (page - 1))
+            .limit(pageSize);
+
         return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
                 records: {
-                    blogs: manipulateBlogs(blogs),
+                    data: blogs,
                     PageNumber: page,
                     Pages: Math.ceil(count / pageSize),
                 },
@@ -110,84 +105,71 @@ const updateBlog = asyncHandler(async (req, res) => {
         const { description, title, updateImageIndex, deleteImageIndex } =
             req.body;
         const files = req.files;
-        if (blog) {
-            if (blog.creatorId == req.user._id || req.user.role === "admin") {
-                let index = 0;
-                if (files?.length > 0) {
-                    for (const file of files) {
-                        if (updateImageIndex) {
-                            const imagePath = await getDataURI(file);
-                            const cloudImage =
-                                await cloudinary.v2.uploader.upload(
-                                    imagePath.content,
-                                    {
-                                        public_id:
-                                            file?.originalname?.split(".")[0],
-                                    }
-                                );
-                            if (
-                                cloudImage?.secure_url &&
-                                cloudImage?.secure_url !==
-                                    getImageName(
-                                        blog.images[updateImageIndex[index]]
-                                    )
-                            ) {
-                                await cloudinary.v2.uploader.destroy(
-                                    getImageName(
-                                        blog.images[updateImageIndex[index]]
-                                    )
-                                );
-                            }
 
-                            blog.images[updateImageIndex[index]] =
-                                cloudImage.secure_url;
-                            index++;
-                        } else {
-                            const imagePath = await getDataURI(file);
-                            const cloudImage =
-                                await cloudinary.v2.uploader.upload(
-                                    imagePath.content,
-                                    {
-                                        public_id:
-                                            file?.originalname?.split(".")[0],
-                                    }
-                                );
-                            blog.images.push(cloudImage.secure_url);
-                        }
-                    }
-                }
-                if (deleteImageIndex) {
-                    for (const index of deleteImageIndex) {
-                        await cloudinary.v2.uploader.destroy(
-                            getImageName(blog.images[index])
-                        );
-                        blog.images?.splice(index, 1);
-                    }
-                }
-                blog.description = description || blog.description;
-                blog.title = title || blog.title;
-                blog.images = blog.images;
-                blog.updatedAt = Date.now();
-                await blog.save();
-                return res.status(200).json(
-                    response({
-                        code: 200,
-                        message: "Successfully updated blog details!",
-                    })
-                );
-            } else {
-                return res.status(401).json(
-                    response({
-                        code: 401,
-                        message: "You are not able to update this blog!",
-                    })
-                );
-            }
-        } else {
+        if (!blog) {
             return res
                 .status(404)
                 .json(response({ code: 404, message: "Blog not found!" }));
         }
+
+        if (blog.creatorId != req.user._id && req.user.role !== "admin") {
+            return res.status(401).json(
+                response({
+                    code: 401,
+                    message: "You are not able to update this blog!",
+                })
+            );
+        }
+
+        let index = 0;
+        if (files?.length > 0) {
+            for (const file of files) {
+                const imagePath = await getDataURI(file);
+                const cloudImage = await cloudinary.v2.uploader.upload(
+                    imagePath.content,
+                    { public_id: file?.originalname?.split(".")[0] }
+                );
+
+                if (updateImageIndex) {
+                    if (
+                        cloudImage?.secure_url &&
+                        cloudImage?.secure_url !==
+                            getImageName(blog.images[updateImageIndex[index]])
+                    ) {
+                        await cloudinary.v2.uploader.destroy(
+                            getImageName(blog.images[updateImageIndex[index]])
+                        );
+                    }
+                    blog.images[updateImageIndex[index]] =
+                        cloudImage.secure_url;
+                    index++;
+                } else {
+                    blog.images.push(cloudImage.secure_url);
+                }
+            }
+        }
+
+        if (deleteImageIndex) {
+            for (const index of deleteImageIndex) {
+                await cloudinary.v2.uploader.destroy(
+                    getImageName(blog.images[index])
+                );
+                blog.images?.splice(index, 1);
+            }
+        }
+
+        blog.description = description || blog.description;
+        blog.title = title || blog.title;
+        blog.images = blog.images;
+        blog.updatedAt = Date.now();
+        await blog.save();
+
+        return res.status(200).json(
+            response({
+                code: 200,
+                message: "Successfully updated blog details!",
+            })
+        );
     } catch (error) {
         return res
             .status(500)
@@ -199,6 +181,7 @@ const userBlogsList = asyncHandler(async (req, res) => {
         const pageSize = Number(req.query.pageSize) || 10;
         const page = Number(req.query.page) || 1;
         const sortbyID = { _id: -1 };
+        const sortByRating = { react: -1 };
         const keyword = req.query.keyword
             ? {
                   name: {
@@ -209,35 +192,31 @@ const userBlogsList = asyncHandler(async (req, res) => {
             : {};
 
         const count = await Blog.countDocuments({ ...keyword });
-        const blogs = await Blog.find({ creatorId: req.user._id, ...keyword })
+        const blogs = await Blog.find(
+            { creatorId: req.user._id, ...keyword },
+            {
+                _id: 1,
+                "creatorInfo.id": "$creatorId",
+                "creatorInfo.name": "$creatorName",
+                "creatorInfo.image": "$creatorImage",
+                "creatorInfo.location": "$creatorLocation",
+                title: 1,
+                images: 1,
+                description: 1,
+                react: 1,
+                createdAt: "$createAt",
+            }
+        )
+            .sort(sortByRating)
             .sort(sortbyID)
-            .skip(pageSize * (page - 1));
-        const manipulateBlogs = (blogs) => {
-            return blogs?.length > 0
-                ? blogs.map((blog) => {
-                      return {
-                          id: blog.id,
-                          creatorInfo: {
-                              id: blog.creatorId,
-                              name: blog.creatorName,
-                              image: blog.creatorImage,
-                              location: blog.creatorLocation,
-                          },
-                          title: blog.title,
-                          images: blog.images,
-                          description: blog.description,
-                          react: blog.react,
-                          createdAt: blog.createAt,
-                      };
-                  })
-                : [];
-        };
+            .skip(pageSize * (page - 1))
+            .limit(pageSize);
         return res.status(200).json(
             response({
                 code: 200,
                 message: "Ok",
                 records: {
-                    blogs: manipulateBlogs(blogs),
+                    data: blogs,
                     PageNumber: page,
                     Pages: Math.ceil(count / pageSize),
                 },
@@ -307,7 +286,7 @@ const getBlogById = asyncHandler(async (req, res) => {
                     code: 200,
                     message: "Ok",
                     records: {
-                        id: blog._id,
+                        _id: blog._id,
                         creatorInfo: {
                             id: blog.creatorId,
                             name: blog.creatorName,
