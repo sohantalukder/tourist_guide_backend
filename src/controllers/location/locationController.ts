@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { response } from "../../utility/generateResponse.js";
-import models from "../../models/index.js";
-const Division = models.division;
+import divisions from "../../models/divisions.js";
+import { DataTypes } from "sequelize";
+import dbConnection from "../../models/index.js";
+// const Division = divisions(dbConnection, DataTypes);
 
 export default class LocationController {
     add = async (req: Request, res: Response) => {
@@ -13,10 +15,10 @@ export default class LocationController {
                 isoCode,
                 divisionCode,
             };
-            const newDivision = await Division.create({
-                createObject,
-                createdAt: Date.now(),
-            });
+            // const newDivision = await Division.create({
+            //     createObject,
+            //     createdAt: Date.now(),
+            // });
 
             return res.status(201).json(
                 response({

@@ -1,19 +1,20 @@
-import { DataTypes, Model, Sequelize } from "sequelize";
+import { DataTypes, Model } from "sequelize";
+import dbConnection from ".";
 
-export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
+export default () => {
     class Division extends Model {}
     Division.init(
         {
-            id: dataTypes.NUMBER,
-            divisionName: dataTypes.STRING,
-            divisionCode: dataTypes.NUMBER,
-            geoCode: dataTypes.NUMBER,
-            isoCode: dataTypes.STRING,
-            createAt: dataTypes.DATE,
-            updatedAt: dataTypes.DATE,
+            id: DataTypes.NUMBER,
+            divisionName: DataTypes.STRING,
+            divisionCode: DataTypes.NUMBER,
+            geoCode: DataTypes.NUMBER,
+            isoCode: DataTypes.STRING,
+            createAt: DataTypes.DATE,
+            updatedAt: DataTypes.DATE,
         },
         {
-            sequelize,
+            sequelize: dbConnection,
             modelName: "division",
             underscored: true,
         }
